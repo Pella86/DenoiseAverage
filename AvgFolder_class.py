@@ -7,9 +7,6 @@ Created on Tue Jun 20 06:44:03 2017
 
 # This module deals with the Average
 
-#test git 1
-#test git 2
-
 # Define Imports
 
 # numpy import

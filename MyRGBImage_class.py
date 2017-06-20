@@ -62,7 +62,7 @@ class MyRGBImg(object):
     
     def set_channel(self, image, channel):
         c2idx ={'r':0, 'g':1, 'b':2}
-        img = 255 - image.data
+        img = image.data
         self.data[:,:,c2idx[channel]] = img.transpose()
     
     def move(self, idx, idy):
