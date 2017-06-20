@@ -274,7 +274,7 @@ class AvgFolder(object):
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     
-    mypath = "../silentcam/dataset25/"
+    mypath = "../../silentcam/dataset25/"
     avg = AvgFolder(mypath)
     avg.gather_pictures()
     avg.c2gscale()

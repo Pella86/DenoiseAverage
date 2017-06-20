@@ -72,22 +72,42 @@ class AvgRGB(object):
             dataset = self.algimgs
         else:
             dataset = self.imgs
+        
         s = MyRGBImg(np.zeros(dataset[0].data.shape))
+        s = color.rgb2lab(s.data)
         for i, picture in enumerate(dataset):
             print("Averaging image: " , i)
             # convert both to lab
-            sin = color.rgb2lab(s.data)
             im = color.rgb2lab(picture.data)
             #perform operations
-            m = sin + im  
-            print(m[0][0][0])
-            m = m / float(2)
+            s += im 
             
-            #convert back
-            s.data = color.lab2rgb(m)
-  
-        self.avg = s
-        
+        s = s / float(len(dataset))
+        self.avg = MyRGBImg(color.lab2rgb(s))
+ 
+
+#    def average(self, aligned = True):
+#        if aligned:
+#            dataset = self.algimgs
+#        else:
+#            dataset = self.imgs
+#        s = MyRGBImg(np.zeros(dataset[0].data.shape))
+#        for i, picture in enumerate(dataset):
+#            print("Averaging image: " , i)
+#            # convert both to lab
+#            sin = color.rgb2lab(s.data)
+#            im = color.rgb2lab(picture.data)
+#            #perform operations
+#            m = sin + im  
+#            print(m[0][0][0])
+#            m = m / float(2)
+#            
+#            #convert back
+#            s.data = color.lab2rgb(m)
+#  
+#        self.avg = s
+#        
+       
     def load_algs(self):
         with open(join(self.subfolders["results"], "shifts_log.txt")) as f:
             lines = f.readlines()
@@ -96,20 +116,23 @@ class AvgRGB(object):
         for line in lines:
             data = line.split(' | ')
             data = [int(d.strip()) for d in data]
-            print (data)
             self.algs.append(data)
-            
+        lg.info("Alignments imported successfully")
+        
     def align_images(self):
         self.algimgs = []
         for i, image in enumerate(self.imgs):
-            print("alg:",self.algs[i][0], self.algs[i][1])
-            image.move(self.algs[i][0], self.algs[i][1])
-            self.algimgs.append(image)
+            algimage = deepcopy(image)
+            print("alg:", self.algs[i][0], self.algs[i][1])
+            algimage.move(-self.algs[i][1], -self.algs[i][0])
+            self.algimgs.append(algimage)
+        lg.info("Images aligned successfully")
             
     def save_algimgs(self):
         for i, algimg in enumerate(self.algimgs):
             filename, ext = splitext(self.names[i])
             algimg.save(join(self.subfolders["aligned_rgb_images"], ("alg_" + filename + ".png" )))
+        lg.info("Saved aligned images successfully") 
     
     def save_avg(self, name = "avg_rgb.png"):
         self.avg.save(join(self.subfolders["results"], name))
@@ -144,3 +167,8 @@ if __name__ == "__main__":
     avg.align_images()
     avg.average()
     avg.save_avg()
+    
+    import winsound
+    Freq = 2500 # Set Frequency To 2500 Hertz
+    Dur = 1000 # Set Duration To 1000 ms == 1 second
+    winsound.Beep(Freq,Dur)
