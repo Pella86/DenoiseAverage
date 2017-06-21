@@ -21,6 +21,7 @@ from skimage import color
 from os.path import isdir, isfile, join, splitext
 from os import listdir, mkdir
 import logging as lg
+from copy import deepcopy
 
 # My imports
 from MyRGBImage_class import MyRGBImg

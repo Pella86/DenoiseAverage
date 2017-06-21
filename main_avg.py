@@ -8,18 +8,20 @@ Created on Mon Jun 19 16:30:42 2017
 
 # Define Imports
 
-# matplotlib imports
-import matplotlib.pyplot as plt
-
-# My imports
-from AvgFolder_class import AvgFolder
 
 
 if __name__ == "__main__":
     print("START AVERAGING SCRIPT")
+
+    # matplotlib imports
+    import matplotlib.pyplot as plt
     
-    mypath = "../silentcam/dataset29/"
-    avg = AvgFolder(mypath)
+    # My imports
+    from AvgFolder_class import AvgFolder
+
+    
+    pathtodataset = "../../silentcam/dataset31/"
+    avg = AvgFolder(pathtodataset)
     avg.gather_pictures()
     avg.c2gscale()
     avg.squareit()
@@ -49,4 +51,19 @@ if __name__ == "__main__":
         avg.average()
         avg.save_avg()
         avg.avg.show_image()
-        plt.show()    
+        plt.show()
+
+    from AvgRGB_class import AvgRGB
+    
+    
+    avg = AvgRGB(pathtodataset)
+    avg.gather_pictures()
+    avg.load_algs()
+    avg.align_images()
+    avg.average()
+    avg.save_avg()
+    
+#    import winsound
+#    Freq = 2500 # Set Frequency To 2500 Hertz
+#    Dur = 1000 # Set Duration To 1000 ms == 1 second
+#    winsound.Beep(Freq,Dur)
