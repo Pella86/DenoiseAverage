@@ -160,7 +160,7 @@ class AvgRGB(object):
 
 if __name__ == "__main__":
     
-    pathtodataset = "../../silentcam/dataset25/"
+    pathtodataset = "../../../silentcam/dataset25/"
     
     avg = AvgRGB(pathtodataset)
     avg.gather_pictures()
