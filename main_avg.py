@@ -29,7 +29,7 @@ if __name__ == "__main__":
     avg.gather_pictures()
     avg.c2gscale()
     avg.squareit()
-    avg.binning(2)    
+    avg.binning(0)    
     avg.transpose()
     avg.normalize() 
     
@@ -60,12 +60,12 @@ if __name__ == "__main__":
     from AvgRGB_class import AvgRGB
     
     
-    avg = AvgRGB(pathtodataset)
-    avg.gather_pictures()
-    avg.load_algs()
-    avg.align_images()
-    avg.average()
-    avg.save_avg()
+#    avg = AvgRGB(pathtodataset)
+#    avg.gather_pictures()
+#    avg.load_algs()
+#    avg.align_images()
+#    avg.average()
+#    avg.save_avg()
     
     import winsound
     Freq = 2500 # Set Frequency To 2500 Hertz

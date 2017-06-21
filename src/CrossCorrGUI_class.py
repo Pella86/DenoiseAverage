@@ -10,48 +10,60 @@ Created on Wed Jun 21 15:44:04 2017
 #==============================================================================
 
 # TkInter
-from Tkinter import Tk, PhotoImage, Label 
+from tkinter import Tk, PhotoImage, Label, Frame
 
 # sys imports
 from os import mkdir 
-from os.path import join, split, isdir
+from os.path import join, split, isdir, isfile, splitext
 from shutil import rmtree
 
 # matlibplot imports
 import matplotlib.pyplot as plt
+from scipy.misc import imsave
 
 # my imports
 from MyImage_class import MyImage
 
-class ImagePath:
-    
-    def __init__(self, name, image):
-        self.image = image
-        self.name = name
 
+
+def get_pathname(path):
+        path, nameext = split(path)
+        name, ext = splitext(nameext)
+        return path, name, ext
 
 class CrossCorrGUI:
     
     def __init__(self, imagepathname):
         
-        proc_path, ext = split(imagepathname)
-        path, name = split(proc_path)
+        path, name, ext = get_pathname(imagepathname)
         self.mainpath = path
         self.name = name
-        self.inimg_name = join(self.name, ext)
+        self.inimg_name = self.name + ext
+        
         
         
         # create the directory for the elaboration
-        self.bufpath = join(self.path,self.name)
+        self.bufpath = join(self.mainpath,self.name)
         if not isdir(self.bufpath):
             mkdir(self.bufpath)
         
+        bufpath = self.bufpath
+            
+        class ImagePath:
+    
+            def __init__(self, name, image):
+                self.image = image
+                self.name = name
+                self.gifname = join(bufpath, self.name) + '.gif'
+        
         # open the source image
         self.inimage = ImagePath(self.name, MyImage())
-        self.inimage.image.read_from_file(self.inimage.path)
+        self.inimage.image.read_from_file(imagepathname)
+        
+        self.savegif(self.inimage)
     
     def savegif(self,imagepath):
-        plt.imsave(self.bufpath + imagepath + '.gif', imagepath.image.data, format = "gif")
+        imsave(imagepath.gifname, imagepath.image.data, format = "gif")
         
     def rm(self):
         rmtree(self.bufpath)
@@ -72,17 +84,20 @@ class CrossCorrGUI:
         
         # inverse fft
 
-if __name__ == "__name__":
+if __name__ == "__main__":
     
-    img_path = "C://Users/Mauro/Desktop/Vita Online/Programming/Picture cross corr/silentcam/dataset24/avg/correlation_images/corr_1497777846958.png"
+    img_path = "C:/Users/Mauro/Desktop/Vita Online/Programming/Picture cross corr/silentcam/dataset24/avg/correlation_images/corr_1497777846958.png"
+    
+    
     m = CrossCorrGUI(img_path)
-    
-    
+    print(isfile(m.inimage.gifname))
     root = Tk()
-    logo = PhotoImage(file="../images/python_logo_small.gif")
-    w = Label(root, 
-          compound = Tk.CENTER,
-          text="WHAT THE FUCK TKINTER", 
-          image=logo).pack(side="right")
+    logo = PhotoImage(file = m.inimage.gifname)
+    print(logo)
+    frame = Frame(root, width = 100, height = 100)
+    frame.pack()
+    w = Label(frame,
+          text="WHAT THE FUCK TKINTER", image = logo)
+    w.pack(side = "left")
 
     root.mainloop()
