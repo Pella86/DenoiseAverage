@@ -23,8 +23,15 @@ class MyImage(object):
     # initialization functions
     
     def __init__(self, data = np.zeros((5,5))):
-        self.data = data
- 
+        
+        if type(data) == np.ndarray:
+            self.data = data
+        elif isinstance(data, tuple):
+            if len(data) == 2:
+                self.data = np.zeros(data)
+        else:
+            raise ValueError("data type not supported")
+            
     
     # debug options
     
