@@ -33,10 +33,14 @@ class FFTimagesize(Exception):
    def __init__(self, value):
        self.value = value
    def __str__(self):
-       try:
-           return "FFTerror: Image size not supported {0} | {1}".foramt(self.value[0], self.value[1])
-       except:
-           return "wtf dude??"
+
+      return "FFTerror: Image size not supported {0} | {1}".foramt(self.value[0], self.value[1])
+
+
+#       try:
+#           return "FFTerror: Image size not supported {0} | {1}".foramt(self.value[0], self.value[1])
+#       except:
+#           return "wtf dude??"
 
 #==============================================================================
 # # classes

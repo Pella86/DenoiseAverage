@@ -3,6 +3,10 @@
 Created on Wed Jun 21 15:44:04 2017
 
 @author: Mauro
+
+The idea of the script is to create a small GUI managing the bandpass filter.
+Since Tkinter can import only GIF image, an interface creates the images and
+saves them in  a buffer folder, that are then read by the GUI class
 """
 
 #==============================================================================
@@ -25,6 +29,9 @@ from MyImage_class import MyImage, Mask
 from ImageFFT_class import ImgFFT
 
 
+#==============================================================================
+# Define Class managing image
+#==============================================================================
 
 def get_pathname(path):
         path, nameext = split(path)
@@ -47,9 +54,7 @@ class ImageManager:
         self.mainpath = path
         self.name = name
         self.inimg_name = self.name + ext
-        
-        
-        
+
         # create the directory for the elaboration
         self.bufpath = join(self.mainpath,self.name)
         if not isdir(self.bufpath):
@@ -60,43 +65,23 @@ class ImageManager:
         self.inimage.image.read_from_file(imagepathname)
         self.inimage.image.convert2grayscale()
         
+        # resize the image and save it in gif format
         self.savegif(self.inimage, (500, 500))
         
+        # declare the fourier transform
         self.ftimage = 0
         
-        
-        # transfrom the image
-        
-#        self.ftimage = ImgFFT(self.inimage.image)
-#        self.ftimage.ft()
-#
-#        
-#        # create bandpass mask
-#        mask = Mask((1080, 1080))
-#        mask.bandpass(5, 2, 500, 10)
-#        
-#        self.ftimage.apply_mask(mask)
-#
-#
-#        # represent the masked ps
-#        self.ftimage.power_spectrum()
-#        self.psimage = ImagePath(self.name + "_ps", self.ftimage.ps)
-#        self.savegif(self.psimage, (500, 500))
-#        
-#        # represent the inverse fourier
-#        
-#        self.ftimage.ift()
-#        
-#        self.iftimage = ImagePath(self.name + "ift", self.ftimage.imgifft)
-#        self.savegif(self.iftimage, (500, 500))    
-#        
-        
+        # TODO        
         # findppeak on the better cc
         # represent it with the tkinter canvas
         
     def calculate_bandpass(self, inradius, insmooth, outradius, outsmooth):
-        #transfrom the image
+        ''' This method calculates the filter and saves the corresponding images
+        the power spectrum (self.psimage) and the result of the filter
+        (self.iftimage) in the temp folder
+        '''
         
+        #transfrom the image
         self.ftimage = ImgFFT(self.inimage.image)
         self.ftimage.ft()
 
@@ -104,50 +89,38 @@ class ImageManager:
         # create bandpass mask
         mask = Mask(self.inimage.image.data.shape)
         mask.bandpass(inradius, insmooth, outradius, outsmooth)
-        
         self.ftimage.apply_mask(mask)
-
 
         # represent the masked ps
         self.ftimage.power_spectrum()
         self.psimage = ImagePath(self.name + "_ps", self.ftimage.ps, self.bufpath)
         self.savegif(self.psimage, (500, 500))        
 
-
+        # calculate inverse transform
         self.ftimage.ift()
-        
         self.iftimage = ImagePath(self.name + "ift", self.ftimage.imgifft, self.bufpath)
         self.savegif(self.iftimage, (500, 500))
 
     def savegif(self,imagepath, size):
+        ''' Given a class imagepath and the size of the images, saves into the
+        temp folder the associated image
+        '''
+        
+        # calculate ft for resizing
         imft = ImgFFT(imagepath.image.data)
         imft.ft()
         im = imft.resize_image(size[0], size[1])
-        from matplotlib import pyplot as plt
-        im.inspect()
-        im.show_image()
-        plt.show()
-#        im = imagepath.image
+        
+        # save resized image
         imsave(imagepath.gifname, im.data, format = "gif")
         
     def rm(self):
         rmtree(self.bufpath)
         
-        # save the image in the buffer as 
         
-        # get the fourier transform done
-        
-        # get the powerspectrum done
-        
-        # save ps as gif
-        
-        # make the mask
-        
-        # save the mask
-        
-        # apply mask on fourier
-        
-        # inverse fft
+#==============================================================================
+# Define GUI Object
+#==============================================================================
 
 class MyWidget(object):
     
@@ -162,11 +135,9 @@ class MyWidget(object):
         self.canvasposition = {"inimage" : 0, "fft" : 500, "ift" : 1000}
         
         # initializate the helper class
-        
         self.helper = ImageManager(mypathtoimage)
         
         # show the first image
-        
         self.show_image(self.helper.inimage, "inimage")
         
         # create entries for bandpass
@@ -178,7 +149,7 @@ class MyWidget(object):
         
         # define the entry names
         myvariablesnames = ["inradius", "insmooth", "outradius", "outsmooth"]
-        std_values = [str(e) for e in [5, 2, 100, 10]]
+        std_values = [str(e) for e in [5, 2, 100, 10]] # default bp values
         
         self.entries = {}
         for i, element in enumerate(myvariablesnames):
@@ -191,6 +162,13 @@ class MyWidget(object):
         
         b = Button(entryframe, text = "Calculate", command = self.calculate)
         b.grid(row = 0, column = 10)
+        
+        # - todo -
+        # load button
+        # save image button
+        # save single or all images
+        # single or united
+        # save bp button
         
     
     def calculate(self):
@@ -206,47 +184,33 @@ class MyWidget(object):
         self.show_image(self.helper.psimage, "fft")
         
         self.show_image(self.helper.iftimage, "ift")
-        
-           
-        
-        
-    
+
     def show_image(self, image, name):
         inimage = PhotoImage(file = image.gifname)
         self.frame.image[name] = inimage
         self.canvas.create_image(self.canvasposition[name],0 , image = inimage, anchor = "nw")
 
     
-     
+#==============================================================================
+# Test environment     
+#==============================================================================
 
 if __name__ == "__main__":
+    
+    piccorrpath = "C:/Users/Mauro/Desktop/Vita Online/Programming/Picture cross corr/"
     
     img_path = "C:/Users/Mauro/Desktop/Vita Online/Programming/Picture cross corr/silentcam/dataset24/avg/correlation_images/corr_1497777846958.png"
     img_path = "C:/Users/Mauro/Desktop/Vita Online/Programming/Picture cross corr/Lenna.png"
     img_path = "C:/Users/Mauro/Desktop/Vita Online/Programming/Picture cross corr/silentcam/dataset24/avg/processed_images/proc_1497777845048.png"
     
-    #m = CrossCorrGUI(img_path)
+    img_path = join(piccorrpath, "silentcam/dataset24/avg/results/avg.png")
 
-    root = Tk()
-#    inimage  = PhotoImage(file = m.inimage.gifname)
-#    psimage  = PhotoImage(file = m.psimage.gifname)
-#    iftimage = PhotoImage(file = m.iftimage.gifname)
-#    frame = Frame(root)
-#    frame.pack()    
-#    canvas = Canvas(frame, width=1500, height=500)
-#    
-#    canvas.create_image(0,0, image = inimage, anchor = "nw")
-#    canvas.create_image(500,0, image = psimage, anchor = "nw")
-#    canvas.create_image(1000,0, image = iftimage, anchor = "nw")
-
-    MyWidget(root, img_path)
+    # initializate Tk root
+    root = Tk()    
+    m = MyWidget(root, img_path)
     
-
-#    w = Label(frame, text="WHAT THE FUCK TKINTER", image = inimage)
-#    w.pack(side = "left")
-#    w = Label(frame, text="WHAT THE FUCK TKINTER", image = psimage)
-#    w.pack(side = "left")
-#    w = Label(frame, text="WHAT THE FUCK TKINTER", image = iftimage)
-#    w.pack(side = "left")
-
+    # start the loop
     root.mainloop()
+    
+    # clean up    
+    m.helper.rm()
