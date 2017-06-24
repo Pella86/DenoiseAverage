@@ -30,14 +30,10 @@ from scipy.misc import imsave
 from MyImage_class import MyImage, Mask
 from ImageFFT_class import ImgFFT
 
-# todo today:
-    # load file button        V
+# todo:
     # save files button:      V
         # save composite      
-        # save single images  V
-        # save algs           V
     # add loading screen
-    # add inspect label       V
     # support for RGB images
 
 
@@ -46,12 +42,14 @@ from ImageFFT_class import ImgFFT
 #==============================================================================
 
 def get_pathname(path):
-        path, nameext = split(path)
-        name, ext = splitext(nameext)
-        return path, name, ext
+    ''' Little function to split the path in path, name, extension'''
+    path, nameext = split(path)
+    name, ext = splitext(nameext)
+    return path, name, ext
 
 
 class ImagePath:
+    ''' Class that holds the filenames of the buffer folder and the images'''
 
     def __init__(self, name, image, bufpath):
         self.image = image
@@ -59,6 +57,9 @@ class ImagePath:
         self.gifname = join(bufpath, self.name) + '.gif'
 
 class ImageManager:
+    ''' This class manages the images to be elaborated, it works in background 
+    of the GUI to provide the transformations needed and the conversion to gif
+    '''
     
     def __init__(self, imagepathname):
         
@@ -352,18 +353,10 @@ class MyWidget(object):
 #==============================================================================
 
 if __name__ == "__main__":
-    
-    piccorrpath = "C:/Users/Mauro/Desktop/Vita Online/Programming/Picture cross corr/"
-    
-    img_path = "C:/Users/Mauro/Desktop/Vita Online/Programming/Picture cross corr/silentcam/dataset24/avg/correlation_images/corr_1497777846958.png"
-    img_path = "C:/Users/Mauro/Desktop/Vita Online/Programming/Picture cross corr/Lenna.png"
-    img_path = "C:/Users/Mauro/Desktop/Vita Online/Programming/Picture cross corr/silentcam/dataset24/avg/processed_images/proc_1497777845048.png"
-    
-    img_path = join(piccorrpath, "silentcam/dataset24/avg/results/avg.png")
 
     # initializate Tk root
     root = Tk()    
-    m = MyWidget(root, img_path)
+    m = MyWidget(root, "../data/Lena.png")
     
     # start the loop
     root.mainloop()
