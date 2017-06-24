@@ -63,6 +63,7 @@ class ImageManager:
     
     def __init__(self, imagepathname):
         
+        # set the initial path and extract the approriate information
         self.initialpath = imagepathname
         
         path, name, ext = get_pathname(self.initialpath)
@@ -105,7 +106,6 @@ class ImageManager:
         self.ftimage = ImgFFT(self.inimage.image)
         self.ftimage.ft()
 
-        
         # create bandpass mask
         mask = Mask(self.inimage.image.data.shape)
         mask.bandpass(inradius, insmooth, outradius, outsmooth)
@@ -135,6 +135,7 @@ class ImageManager:
         imsave(imagepath.gifname, im.data, format = "gif")
         
     def rm(self):
+        ''' cleans up the buffer folder containing the gifs files'''
         if isdir(self.bufpath):
             rmtree(self.bufpath)
         
@@ -146,14 +147,16 @@ class ImageManager:
 class MyWidget(object):
     
     def __init__(self, root, mypathtoimage):
-        # initialize the frame and the canvas
+        # initialize the frame
         self.frame = Frame(root)
         self.frame.pack()    
         
-        self.mypathtoimage = mypathtoimage
+#        self.mypathtoimage = mypathtoimage
+#        
+#        # initialize helper class
+#        self.helper = ImageManager(self.mypathtoimage)
         
-        # initialize helper class
-        self.helper = ImageManager(self.mypathtoimage)
+        self.helper = 0
         
         # define the menu
         menubar = Menu(self.frame)
@@ -161,6 +164,11 @@ class MyWidget(object):
         menufile = Menu(menubar, tearoff = 0)
         menufile.add_command(label = "Open file...", command = self.openfile)
         menubar.add_cascade(label = "File", menu = menufile)
+        
+         root.config(menu = menubar)
+        
+        # TODO:
+            # add save menu
         
         # add a label representing image data
         self.vstr_iminfo = StringVar()
@@ -175,12 +183,12 @@ class MyWidget(object):
         
         self.frame.image = {"inimage" : 0, "fft" : 0, "ift" : 0}
         self.canvasposition = {"inimage" : 0, "fft" : 500, "ift" : 1000}
-        
 
         # create entries for bandpass
-        Label(self.frame, text = "band pass values").grid(row = 2, column = 0)
+        l = Label(self.frame, text = "band pass values")
+        l.grid(row = 2, column = 0)
         
-        # create a new frame that contains 4 labels 4 entries
+        # create a new frame that contains 4 labels 4 entries and calculate button
         entryframe = Frame(self.frame)
         entryframe.grid(row = 3, column = 0) 
         
@@ -196,22 +204,19 @@ class MyWidget(object):
             self.entries[element].grid(column = i * 2 + 1, row = 0)
         
         # define a button calculate
-        
         b = Button(entryframe, text = "Calculate", command = self.calculate)
         b.grid(row = 0, column = 10)
-        
-        root.config(menu = menubar)
-        
+
         # build the save menu
-        
         self.savedir = StringVar()
-        self.savedir.set(self.helper.mainpath)
+        self.savedir.set(" not init")
         
         # add save frame
         saveframe = Frame(self.frame)
         saveframe.grid(row = 4, column = 0)
   
-        # define the entry names
+        # define the save buttons. Transform it in a top level and call it once
+        # is pressed on the menu
         self.myvariablesnames = ["wkdir", "saveps", "saveift", "savecomp"]
         self.defvalues = [self.savedir.get(),
                      self.helper.name + "_ps",
@@ -228,10 +233,12 @@ class MyWidget(object):
             
             self.savefilesentry[element] = Entry(saveframe, textvariable = self.myvar_savefilenames[element])
             self.savefilesentry[element].grid(column = 1, row = i)
-
+        
+        # get directory to save pictures
         getdir = Button(saveframe, text = "get directory", command = self.getdirectory)
         getdir.grid(row = 0, column = 2)
         
+        # create the check buttons to tell which images to save
         self.saveps = IntVar()
         self.saveift = IntVar()
         self.savecomp = IntVar()
@@ -256,6 +263,7 @@ class MyWidget(object):
         self.savedir.set(filedialog.askdirectory())
     
     def saveimages(self):
+        ''' saves the displayed images from the original data'''
         wkdir = self.myvar_savefilenames["wkdir"].get()
 
         if self.saveps.get():
@@ -292,6 +300,7 @@ class MyWidget(object):
             newimage.save(join(wkdir, filename + ".png"))
         
     def openfile(self):
+        ''' The desired file gets initialized and updates the different fields'''
         # clean the folder
         self.helper.rm()
         
@@ -329,21 +338,24 @@ class MyWidget(object):
         outradius = self.entries["outradius"].get()
         outsmooth = self.entries["outsmooth"].get()
 
-        
+        # apply the bandpass to the fourier transform
         self.helper.calculate_bandpass(int(inradius), int(insmooth), int(outradius), int(outsmooth))
         
+        # represent the bandpass int
         self.show_image(self.helper.psimage, "fft")
-        
         self.show_image(self.helper.iftimage, "ift")
         
+        # unlock the button if a real image is imported
         self.saveimgs_b['state'] = 'normal'
 
     def show_image(self, image, name):
+        ''' display the image in the canvas'''
         inimage = PhotoImage(file = image.gifname)
         self.frame.image[name] = inimage
         self.canvas.create_image(self.canvasposition[name],0 , image = inimage, anchor = "nw")
     
     def buildinfostr(self):
+        ''' helper function to build the label infos'''
         name = self.helper.inimage.name
         inspect = self.helper.inimage.image.inspect()
         return name + " | " + inspect
