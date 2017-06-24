@@ -20,12 +20,38 @@ from copy import deepcopy
 from MyImage_class import MyImage, Corr
 
 
+#==============================================================================
+# # Exceptions
+#==============================================================================
 class FFTnotInit(Exception):
+   def __init__(self, value = 0):
+       self.value = value
+   def __str__(self):
+       return "FFTerror: Fourier transform not initialized"
+
+class FFTimagesize(Exception):
    def __init__(self, value):
        self.value = value
    def __str__(self):
-       return "Fourier transform not initialized"
 
+      return "FFTerror: Image size not supported {0} | {1}".foramt(self.value[0], self.value[1])
+
+
+#       try:
+#           return "FFTerror: Image size not supported {0} | {1}".foramt(self.value[0], self.value[1])
+#       except:
+#           return "wtf dude??"
+
+#==============================================================================
+# # classes
+#==============================================================================
+
+class myFFT(object):
+    def __init__(self, ft):
+        self.ft = ft
+    
+    def ift(self):
+      return MyImage(np.real(fft.ifft2(fft.fftshift(self.ft))))
 
 class ImgFFT(object):
     
@@ -102,5 +128,53 @@ class ImgFFT(object):
             cc.data = np.roll(cc.data, int(cc.data.shape[0] / 2), axis = 0)
             cc.data = np.roll(cc.data, int(cc.data.shape[1] / 2), axis = 1)
         else:
-            raise FFTnotInit("idek")
+            raise FFTnotInit()
         return cc
+    
+    def resize_image(self, sizex, sizey):
+        imsizex = self.img.data.shape[0]
+        imsizey = self.img.data.shape[1]
+        
+        if sizex > imsizex or sizey > imsizey:
+            raise FFTimagesize((sizex, sizey))
+        else:
+            l2x = imsizex / 2
+            l2y = imsizex / 2
+            
+            if self.imgfft is 0:
+                raise FFTnotInit()
+            else:
+                xl = int(l2x - sizex / 2)
+                xu = int(l2x + sizex / 2)
+                yl = int(l2y - sizey / 2)
+                yu = int(l2y + sizey / 2)
+                fftresized = myFFT(self.imgfft[xl : xu, yl : yu])
+                return fftresized.ift()
+                
+                
+if __name__ == "__main__":
+    
+    from matplotlib import pyplot as plt
+    
+    # load sample image
+    imagepath = "C:/Users/Mauro/Desktop/Vita Online/Programming/Picture cross corr/Lenna.png"
+    imagepath = "C:/Users/Mauro/Desktop/Vita Online/Programming/Picture cross corr/silentcam/dataset24/avg/correlation_images/corr_1497777846958.png"
+
+    
+    im = MyImage()
+    im.read_from_file(imagepath)
+    im.convert2grayscale()
+
+    im.show_image()
+    plt.show()
+   
+    ft = ImgFFT(im)
+    ft.ft()
+    
+    re = ft.resize_image(100, 100)
+    
+    
+    
+    re.show_image()
+    plt.show()
+    
