@@ -32,7 +32,28 @@ class MyRGBImg(object):
     def read_from_file(self, filepathname, normalize = True):
         # import image from file
         # todo warnings about file existing
-        self.data = mpimg.imread(filepathname)
+        img = mpimg.imread(filepathname)
+        img = MyRGBImg(img)
+        
+        
+        if img.data.shape[2] == 4:
+            colors = []
+            for i in range(3):
+                channel = img.get_channel(i)
+                colors.append(channel)
+            
+            # initializate the image
+            myimage = MyRGBImg(data = np.zeros((img.data.shape[0],
+                                                img.data.shape[1],
+                                                3)))
+            for i in range(3):
+                channel = colors[i]
+                channel.data = np.transpose(channel.data)
+                myimage.set_channel(channel, i)
+            self.data = myimage.data
+        else:
+            self.data = img.data
+        
         if normalize:
             self.limit(1)
 
@@ -57,11 +78,17 @@ class MyRGBImg(object):
             self.data = npic * valmax
 
     def get_channel(self, channel):
-        c2idx ={'r':0, 'g':1, 'b':2}
+        if type(channel) == str:
+            c2idx ={'r':0, 'g':1, 'b':2}
+        else:
+            c2idx = [0, 1, 2]
         return MyImage(self.data[:,:,c2idx[channel]])
     
     def set_channel(self, image, channel):
-        c2idx ={'r':0, 'g':1, 'b':2}
+        if type(channel) == str:
+            c2idx ={'r':0, 'g':1, 'b':2}
+        else:
+            c2idx = [0, 1, 2]
         img = image.data
         self.data[:,:,c2idx[channel]] = img.transpose()
     
@@ -104,7 +131,8 @@ class MyRGBImg(object):
 if __name__ == "__main__":
     # load a sample rgb picture
 
-    path = "../../silentcam/dataset25/1497791410073.jpg"
+    path = "../../../silentcam/dataset25/1497791410073.jpg"
+    path = "../../../silentcam/dataset25/avg/aligned_rgb_images/alg_1497791410073.png"
     
     myimg = MyRGBImg()
     myimg.read_from_file(path)
@@ -121,8 +149,8 @@ if __name__ == "__main__":
     
     mvimg.inspect('r')
     
-    path = "../../silentcam/dataset25/rgbtest/mov_1497791410073.png"
-    mvimg.save(path)
+#    path = "../../../silentcam/dataset25/rgbtest/mov_1497791410073.png"
+#    mvimg.save(path)
     
     
     

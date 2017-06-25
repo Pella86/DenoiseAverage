@@ -15,104 +15,16 @@ sys.path.append("./src")
 if __name__ == "__main__":
     print("START AVERAGING SCRIPT")
     
-<<<<<<< HEAD
-<<<<<<< HEAD
-    pathtodataset = "../../silentcam/dataset32/"    
 
-    # matplotlib imports
-    import matplotlib.pyplot as plt
-    
-    # My imports
-    from AvgFolder_class import AvgFolder
+    pathtodataset = "../../silentcam/dataset7/"    
 
-    
-
-    avg = AvgFolder(pathtodataset)
-    avg.gather_pictures()
-    avg.c2gscale()
-    avg.squareit()
-    avg.binning(0)    
-    avg.transpose()
-    avg.normalize() 
-    
-    avg.save_imgs()
-
-        
-    avg.generate_template("UseFirstImage")
-    avg.save_template()
-    
-    avg.template.show_image()
-    plt.show()  
-    
-    avg.template.inspect()
-    
-    correlate = True
-    if correlate:
-        # aling dataset
-        avg.align_images()
-        avg.save_algimgs()
-        avg.save_corrs()
-        avg.save_shifts()
-        
-        avg.average()
-        avg.save_avg()
-        avg.avg.show_image()
-        plt.show()
-
-=======
-    pathtodataset = "../../silentcam/dataset30/"    
-#
-#    # matplotlib imports
-#    import matplotlib.pyplot as plt
-#    
-#    # My imports
-#    from AvgFolder_class import AvgFolder
-#
-#    
-#
-#    avg = AvgFolder(pathtodataset)
-#    avg.gather_pictures()
-#    avg.c2gscale()
-#    avg.squareit()
-#    avg.binning(0)    
-#    avg.transpose()
-#    avg.normalize() 
-#    
-#    avg.save_imgs()
-#
-#        
-#    avg.generate_template("UseFirstImage")
-#    avg.save_template()
-#    
-#    avg.template.show_image()
-#    plt.show()  
-#    
-#    avg.template.inspect()
-#    
-#    correlate = True
-#    if correlate:
-#        # aling dataset
-#        avg.align_images()
-#        avg.save_algimgs()
-#        avg.save_corrs()
-#        avg.save_shifts()
-#        
-#        avg.average()
-#        avg.save_avg()
-#        avg.avg.show_image()
-#        plt.show()
-#
->>>>>>> CrossCorrGUI
-    from AvgRGB_class import AvgRGB
-=======
     import time
->>>>>>> CrossCorrGUI
-    
+  
+    # Time the functions
     timenow = time.process_time()
     
-    pathtodataset = "../../silentcam/dataset35/"  
-    
-    avgtype = "gray"
+    # standard options
+    avgtype = "rgb"
     sound = False
     
     class Timings:
@@ -134,7 +46,7 @@ if __name__ == "__main__":
             self.nowtime = time.process_time()
             subtime =  self.nowtime - self.lastcall
             subtime = self.convert_in_ddhhss(subtime)
-            s  = "Elapsed time for subprocess:{0}\n".format(subtime)
+            s  = "Elapsed time for subprocess: {0}\n".format(subtime)
             
             totaltime = self.nowtime - self.starttime
             totaltime = self.convert_in_ddhhss(totaltime)
@@ -213,8 +125,7 @@ if __name__ == "__main__":
 
     if avgtype == "rgb":
         from AvgRGB_class import AvgRGB
-        
-        
+
         avg = AvgRGB(pathtodataset)
         
         print("Gathering pictures...")
@@ -234,7 +145,68 @@ if __name__ == "__main__":
         print(t)
         
         avg.save_avg()
+        
+    if avgtype == "rgb savememory":
+        from AvgRGB_class import AvgRGB_savememory
+
+        avg = AvgRGB_savememory(pathtodataset)
+        
+        print("Gathering pictures...")
+        avg.gather_pictures_names()
+        print(t)
+        
+        print("Loading algs...")
+        avg.load_algs()
+        print(t)
+        
+        print("Align pictures...")
+        avg.align_images(debug = True)
+        print(t)
+        
+        print("Average pictures...")
+        avg.average(debug = True)
+        print(t)
+        
+        avg.save_avg()  
     
+    if avgtype == "print algs":
+        from AvgRGB_class import AvgRGB_savememory
+        
+        from matplotlib import pyplot as plt
+        
+        avg = AvgRGB_savememory(pathtodataset)
+        
+        print("Gathering pictures...")
+        avg.gather_pictures_names()
+        print(t)
+        
+        print("Loading algs...")
+        avg.load_algs()
+        print(t)
+        
+        datapointsx = [x[0] for x in avg.algs]
+        datapointsy = [y[1] for y in avg.algs]
+        
+        fig, ax = plt.subplots()
+        rects1 = ax.scatter(datapointsx, datapointsy)
+
+        def forceAspect(ax,aspect=1):
+            im = ax.get_images()
+            extent =  im[0].get_extent()
+            ax.set_aspect(abs((extent[1]-extent[0])/(extent[3]-extent[2]))/aspect)        
+        
+        
+        ax.set_title('Frame differences')
+        ax.set_aspect('equal', 'box-forced')
+        ax.axis((-120, 120, -80, 80))
+        plt.xlabel("shift in x direction")
+        plt.ylabel("shift in y direction")     
+
+        plt.show()
+        
+
+        
+        
     if sound:
         import winsound
         Freq = 2500 # Set Frequency To 2500 Hertz
