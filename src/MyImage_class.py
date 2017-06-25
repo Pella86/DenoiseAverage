@@ -45,8 +45,9 @@ class MyImage(object):
         d = self.data.shape
         
         if output:
-            s  = "Mean: {0:.2f}|Std: {1:.2f}|Max: {2:.2f}|Min: {3:.2f}|Dim: {4}".format(m, s, u, l, d)
+            s  = "Mean: {0:.2f} | Std: {1:.2f} | Max: {2:.2f}|Min: {3:.2f} | Dim: {4[0]}x{4[1]}".format(m, s, u, l, d)
             print(s)
+            return s
             
         return (m, s, u, l, d)   
     
@@ -87,6 +88,10 @@ class MyImage(object):
 
 
     # editing functions
+    
+    def create_composite_right(self, rhsimage):
+        # enlarge the array to fit the next image
+        self.data = np.concatenate((self.data, rhsimage.data), axis = 1)
     
     def normalize(self):
         #normalize the picture ( ( x- mean) / std ) 
@@ -193,9 +198,9 @@ class Mask(MyImage):
         for i in range(dims[0]):
             for j in range(dims[1]):
                 dcenter = np.sqrt( (i - center[0])**2 + (j - center[1])**2)
-                if dcenter > (radius + smooth):
+                if dcenter >= (radius + smooth):
                     mask[i][j] = 0
-                elif dcenter < (radius - smooth):
+                elif dcenter <= (radius - smooth):
                     mask[i][j] = 1
                 else:
                     y = -1*(dcenter - (radius + smooth))/radius
@@ -230,7 +235,7 @@ class Mask(MyImage):
     
     
 if __name__ == "__main__":
-    mypicname = "../griglia.png"
+    mypicname = "../../../griglia.png"
     mypic = MyImage()
     mypic.read_from_file(mypicname)
     mypic.squareit()
@@ -247,12 +252,17 @@ if __name__ == "__main__":
     plt.show()
     
     # test correlation
-    cc = mypic.correlate(movpic)
+#    cc = mypic.correlate(movpic)
+#    
+#    cc.show_image()
+#    
+#    dx, dy = cc.find_translation()
+#    cc.show_translation(dx, dy)
+#    plt.show()
     
-    cc.show_image()
-    
-    dx, dy = cc.find_translation()
-    cc.show_translation(dx, dy)
+    mypic.create_composite_right(movpic)
+
+    mypic.show_image()
     plt.show()
     
     

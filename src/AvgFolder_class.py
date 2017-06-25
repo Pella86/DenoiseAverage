@@ -151,10 +151,10 @@ class AvgFolder(object):
         lg.info("template created: {0}".format(option))
 
     
-    def align_images(self):
+    def align_images(self, debug = False):
         c = 0
         for image in self.imgs:
-            
+
             imgft = ImgFFT(image)
             imgft.ft()
             
@@ -167,7 +167,8 @@ class AvgFolder(object):
             algimg = deepcopy(image)
             algimg.move(dx,dy)
             self.algimgs.append(algimg)
-            
+            if debug:
+                print("Correlate image:", c)            
             lg.info("correlated image n: " + str(c))
             
             c += 1

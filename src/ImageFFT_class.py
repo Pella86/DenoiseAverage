@@ -33,8 +33,14 @@ class FFTimagesize(Exception):
    def __init__(self, value):
        self.value = value
    def __str__(self):
-
-      return "FFTerror: Image size not supported {0} | {1}".foramt(self.value[0], self.value[1])
+       s = "."
+       try:
+           s = "FFTerror: Image size not supported: {0} | {1}".format(self.value[0], self.value[1])
+       except Exception as e:
+           print(e)
+           print(type(e))
+          
+       return s
 
 
 #       try:
@@ -136,7 +142,7 @@ class ImgFFT(object):
         imsizey = self.img.data.shape[1]
         
         if sizex > imsizex or sizey > imsizey:
-            raise FFTimagesize((sizex, sizey))
+            raise FFTimagesize((imsizex, imsizey))
         else:
             l2x = imsizex / 2
             l2y = imsizex / 2

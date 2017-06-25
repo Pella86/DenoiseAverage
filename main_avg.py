@@ -16,6 +16,7 @@ if __name__ == "__main__":
     print("START AVERAGING SCRIPT")
     
 <<<<<<< HEAD
+<<<<<<< HEAD
     pathtodataset = "../../silentcam/dataset32/"    
 
     # matplotlib imports
@@ -103,7 +104,11 @@ if __name__ == "__main__":
 #
 >>>>>>> CrossCorrGUI
     from AvgRGB_class import AvgRGB
+=======
+    import time
+>>>>>>> CrossCorrGUI
     
+    timenow = time.process_time()
     
     avg = AvgRGB(pathtodataset)
     avg.gather_pictures()
