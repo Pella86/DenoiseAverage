@@ -151,12 +151,10 @@ class MyWidget(object):
         self.frame = Frame(root)
         self.frame.pack()    
         
-#        self.mypathtoimage = mypathtoimage
-#        
-#        # initialize helper class
-#        self.helper = ImageManager(self.mypathtoimage)
+        self.mypathtoimage = mypathtoimage
         
-        self.helper = 0
+        # initialize helper class
+        self.helper = ImageManager(self.mypathtoimage)
         
         # define the menu
         menubar = Menu(self.frame)
@@ -165,7 +163,7 @@ class MyWidget(object):
         menufile.add_command(label = "Open file...", command = self.openfile)
         menubar.add_cascade(label = "File", menu = menufile)
         
-         root.config(menu = menubar)
+        root.config(menu = menubar)
         
         # TODO:
             # add save menu
