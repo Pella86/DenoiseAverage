@@ -90,11 +90,19 @@ class MyRGBImg(object):
         else:
             c2idx = [0, 1, 2]
         img = image.data
-        self.data[:,:,c2idx[channel]] = img.transpose()
+        #hack... don't know whyp
+        datadimx = self.data.shape[0]
+        datadimy = self.data.shape[1]
+        imgdimx = img.shape[0]
+        imgdimy = img.shape[1]
+        if imgdimx != datadimx or imgdimy != datadimy:
+            img = np.transpose(img)
+
+        self.data[:,:,c2idx[channel]] = img
     
     def move(self, idx, idy):
-        dx = idy
-        dy = -idx
+        dx = idx
+        dy = -idy
         mpic = np.zeros(self.data.shape)
         mpiclenx = mpic.shape[0]
         mpicleny = mpic.shape[1]
@@ -106,10 +114,6 @@ class MyRGBImg(object):
                 if xdx >= 0 and xdx < mpiclenx and ydy >= 0 and ydy < mpicleny:
                     for c in range(3):
                         mpic[x][y][c] = self.data[xdx][ydy][c]
-                        if mpic[x][y][c] <= 0:
-                            mpic[x][y][c] = 0
-                        if mpic[x][y][c] >= 1:
-                            mpic[x][y][c] = 1
         self.data = mpic
     
     # operator overload    
@@ -126,6 +130,15 @@ class MyRGBImg(object):
         
         return MyRGBImg(rpic)
     
+    def rotate(self, angle, center = (0,0)):
+        # split channels
+        angle = -angle
+        for c in range(3):
+            ch = self.get_channel(c)
+            ch.rotate(angle, center)
+            self.set_channel(ch, c)
+        
+    
         
     
 if __name__ == "__main__":
@@ -133,6 +146,8 @@ if __name__ == "__main__":
 
     path = "../../../silentcam/dataset25/1497791410073.jpg"
     path = "../../../silentcam/dataset25/avg/aligned_rgb_images/alg_1497791410073.png"
+    path = "../../../Lenna.png"
+    path = "../../../images.png"
     
     myimg = MyRGBImg()
     myimg.read_from_file(path)
@@ -151,6 +166,10 @@ if __name__ == "__main__":
     
 #    path = "../../../silentcam/dataset25/rgbtest/mov_1497791410073.png"
 #    mvimg.save(path)
-    
-    
+
+    # rotate image
+    rotimg = deepcopy(myimg)
+    rotimg.rotate(10, ( -88, 0))
+    rotimg.show_image()
+    plt.show()    
     

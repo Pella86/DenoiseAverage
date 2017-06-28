@@ -699,15 +699,16 @@ class AnalyzeShifts:
     
     def __init__(self, pathtolog):
 
-        
+        path, name, ext = get_pathname(pathtolog)
+        self.path = path
         with open(pathtolog, "r") as f:
-            lines = f.readlines
+            lines = f.readlines()
         
         # process the lines
         self.shifts = []
         for line in lines:
             self.shifts.append(self.read_shifts(line))
-        
+            
         self.shiftsx = [data[0] for data in self.shifts]
         self.shiftsy = [data[1] for data in self.shifts]
         self.angles  = [data[2] for data in self.shifts]        
@@ -720,22 +721,85 @@ class AnalyzeShifts:
     
     def plot_xy(self):
         import matplotlib.pyplot as plt
-        plt.scatter(self.shiftsx, self.shiftsy)
+        
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+
+        factor = np.max(np.abs(self.shiftsx))
+        xmin = - factor - factor * 0.1
+        xmax = factor + factor * 0.1 
+
+        factor = np.max(np.abs(self.shiftsy))
+        ymin = - factor - factor * 0.1
+        ymax = factor + factor * 0.1 
+        
+        # add central cross
+        ax.plot([xmin, xmax], [0, 0], 'r-', linewidth = 0.1)
+        ax.plot([0, 0], [ymin, ymax], 'r-', linewidth = 0.1)
+
+        ax.plot(self.shiftsx, self.shiftsy, 'g-',linewidth = 0.3)
+        ax.plot(self.shiftsx, self.shiftsy, 'bo', alpha = 0.2, ms = 5)
+
+
+        
+        ax.axis((xmin, xmax, ymin, ymax))
+
+        ax.set_title("XY movements during acquisition", fontsize = 15, fontweight = "bold")
+        ax.set_xlabel("Horizontal shifts (pixels)", fontsize = 12)
+        ax.set_ylabel("Vertical shifts (pixels)", fontsize = 12)
+        plt.savefig(join(self.path, 'xy_plot.png'), dpi = 600)
         plt.show()
-    
+        
     def plot_angles(self):
-        x = np.cos(self.angles)
-        y = np.sin(self.angles)
-        plt.scatter(x, y)
+        #calculate frequencies
+        myanglebin = {}
+        myangles = []
+        myangleskey = []
+        
+        for angle in self.angles:
+            anglei = int(angle * 100)
+            try:
+                myanglebin[anglei] += 1
+            except KeyError:
+                myanglebin[anglei] = 0
+                myangles.append(angle)
+                myangleskey.append(anglei)
+                
+        myfreq = [myanglebin[angle] for angle in myangleskey]
+
+        factor = np.max(np.abs(myangles))
+        xmin = - factor - factor * 0.1
+        xmax = factor + factor * 0.1 
+        
+        factor = np.max(np.abs(myfreq))
+        ymax = factor + factor * 0.1 
+        
+        #plot the angle range
+        fig = plt.figure()
+        ax = fig.add_subplot(111)
+        
+        # plot the histogram
+        ax.plot([np.min(myangles), np.min(myangles)], [0, ymax], 'r-', linewidth = 0.1)
+        ax.plot([np.max(myangles), np.max(myangles)], [0, ymax], 'r-', linewidth = 0.1)
+        
+        
+        # label the graph
+        ax.set_title("Rotations during acquisition", fontsize = 15, fontweight = "bold")
+        ax.set_xlabel("Angle (degrees)", fontsize = 12)
+        ax.set_ylabel("Number of rotations", fontsize = 12)
+
+        
+        ax.bar(myangles, myfreq, width = 0.05)
+        ax.axis((xmin, xmax, 0, ymax))
         plt.show()
         
 if __name__ == "__main__":
 
  
     
-    testdatasetpath = "../../../silentcam/testdataset/"
-    template_folder = join(testdatasetpath, "template_folder")
-
+#    testdatasetpath = "../../../silentcam/testdataset/"
+#    template_folder = join(testdatasetpath, "template_folder")
+#
 #    if not isdir(testdatasetpath):
 #        mkdir(testdatasetpath)  
 #    
@@ -809,13 +873,21 @@ if __name__ == "__main__":
 #            plt.show()
 #            
 #            image.save(join(testdatasetpath, "pic_" + str(i) + ".png"))                                         
+#
 
+
+
+    from LogTimes import TimingsTot
+    
+    mypath = "../../../silentcam/dataset10/"
+    
+    t = TimingsTot(mypath + "time_logfile.log")
 
     print("------------------------------")
     print("Loading dataset")
     print("------------------------------")  
 
-    mypath = "../../../silentcam/dataset34/"
+    
     avg = AvgFolderMem(mypath)
     avg.gather_pictures()
     avg.c2gscale()
@@ -823,7 +895,8 @@ if __name__ == "__main__":
     avg.binning(0)
     avg.transpose()
     avg.normalize()
-
+    
+    t.logtimestr("Dataset Loaded")
 
     print("------------------------------")
     print("Generating template")
@@ -833,7 +906,7 @@ if __name__ == "__main__":
 #    custom_template.read_from_file(join(template_folder, "template.png"))
 #    custom_template.convert2grayscale()
 
-    avg.generate_template("UseFirstImage", (-1, 1, 0.1))
+    avg.generate_template("UseFirstImage", (-1.6, 0.4, 0.1))
     avg.save_template()
     
     avg.template.show_image()
@@ -841,6 +914,7 @@ if __name__ == "__main__":
     
     avg.template.inspect()    
  
+    t.logtimestr("Template Generated")
   
     
     correlate = True
@@ -852,6 +926,8 @@ if __name__ == "__main__":
         
         avg.align_images()
         avg.save_shifts()
+
+        t.logtimestr("Alignment completed")
     
         print("------------------------------")
         print("Average")
@@ -859,11 +935,19 @@ if __name__ == "__main__":
         avg.average()
         avg.save_avg()
         
-        avg.avg.inspect()
+        t.logtimestr("Average completed")
         
         avg.avg.show_image()
-        plt.show()   
+        plt.show() 
+        avg.avg.inspect()
+#        
+        
+    a = AnalyzeShifts("../../../silentcam/dataset10/avg/results/shifts_log.txt")
     
+    a.plot_xy()
+    a.plot_angles()
+        
+        
 #    mypath = "../../silentcam/dataset25/"
 #    avg = AvgFolder(mypath)
 #    avg.gather_pictures()

@@ -149,7 +149,8 @@ class MyImage(object):
         return Corr(corr)
 
     def limit(self, valmax):
-        mi = np.min(self.data)
+        mi = self.data.min()
+        mi = np.abs(mi)
         pospic = self.data + mi
         m = np.max(pospic)
         npic = pospic / float(m)
@@ -158,7 +159,7 @@ class MyImage(object):
     def apply_mask(self, mask):
         self.data = self.data * mask.data
         
-    def rotate(self, deg):
+    def rotate(self, deg, center = (0,0)):
 #where c is the cosine of the angle, s is the sine of the angle and x0, y0 are used to correctly translate the rotated image. In psedudocode
 
         src_dimsx = self.data.shape[0]
@@ -167,9 +168,12 @@ class MyImage(object):
         rad = np.deg2rad(deg)
         c = np.cos(rad)
         s = np.sin(rad)
+        
+        cx = center[0] + src_dimsx/2
+        cy = center[1] + src_dimsy/2
 
-        x0 = src_dimsx/2 - c*src_dimsx/2 - s*src_dimsx/2
-        y0 = src_dimsx/2 - c*src_dimsx/2 + s*src_dimsx/2
+        x0 = cx - c*cx - s*cx
+        y0 = cy - c*cy + s*cy
 
         dest = MyImage(self.data.shape)
         
@@ -178,7 +182,8 @@ class MyImage(object):
                 src_x = int(c*x + s*y + x0)
                 src_y = int(-s*x + c*y + y0)
                 if src_y > 0 and src_y < src_dimsy and src_x > 0 and src_x < src_dimsx:
-                    dest.data[y][x] = self.data[src_y][src_x]
+                    dest.data[x][y] = self.data[src_x][src_y]
+                    
         
         self.data = dest.data
 
@@ -275,18 +280,18 @@ if __name__ == "__main__":
     mypic.show_image()
     plt.show()
     
-#    movpic = deepcopy(mypic)
-#    movpic.move(100, 0)
-#    
-#    movpic.show_image()
-#    plt.show()
-#    
-#    myrot = deepcopy(movpic)
-#    myrot.rotate(30)
-#    myrot.normalize()
-#    
-#    myrot.show_image()
-#    plt.show()  
+    movpic = deepcopy(mypic)
+    movpic.move(100, 0)
+    
+    movpic.show_image()
+    plt.show()
+    
+    myrot = deepcopy(mypic)
+    myrot.rotate(45, center = (0, 0))
+    myrot.normalize()
+    
+    myrot.show_image()
+    plt.show()  
     # at theoretical level the precision can be to the 100th of degree...
 #    angles = [10, 29.999, 30, 30.001]
 #    myrots = []
@@ -320,116 +325,133 @@ if __name__ == "__main__":
 #    plt.scatter(xarr, yarr)
 #    plt.show()
     
-    # test the average
-    from ImageFFT_class import ImgFFT
-    
-    # lena is the template
-    template = deepcopy(mypic)
-    tempft = ImgFFT(template)
-    tempft.ft()
-    
-    # construct a rotation space for the template
-    rotangles = [x for x in range(-10,10,1)]
-    
-    rotationspace = []
-    for angle in rotangles:
-        print("rotating template angle:", angle)
-        temprot = deepcopy(template)
-        temprot.rotate(angle)
-        temprotft = ImgFFT(temprot)
-        temprotft.ft()
-        rotationspace.append(temprotft)
-    
-    # construct a dataset with randomly moved and rotated images
-    
-    np.random.seed(5)
-    dataset = []
-    datasetangles = []
-    datasetshifts = []
-    
-    datatrans = []
-    
-    print("------------------------------")
-    print("creating dataset")
-    print("------------------------------")    
-    for i in range(5):
-        image = deepcopy(mypic)
-        anglefirst = False if np.random.randint(0,2) == 0 else True
-        
-        angle = np.random.randint(-10, 10)
-        dx = np.random.randint(-50, 50)
-        dy = np.random.randint(-50, 50)
-        
-        datatrans.append((anglefirst, angle, dx, dy))
-        
-        if anglefirst:
-            datasetangles.append(angle)
-            image.rotate(angle)
-
-            datasetshifts.append((dx,dy))
-            image.move(dx, dy)
-        else:
-            datasetshifts.append((dx,dy))
-            image.move(dx, dy) 
-
-            datasetangles.append(angle)
-            image.rotate(angle)
-        
-        print(datatrans[i])
-           
-        image.show_image()
-        plt.show()
-        dataset.append(image)
-    
-    # for each image test the rotation against the template
-    print("------------------------------")
-    print("Align dataset")
-    print("------------------------------")  
-    
-    def distance(x, y):
-        d = np.sqrt((y-x)**2)
-        return d
-    
-    algimg = []
-    for i, image in enumerate(dataset):
-        print("original transformation: ", datatrans[i])
-        imageft = ImgFFT(image)
-        imageft.ft()
-        smax = 0
-        idxmax = 0
-        for idx, temp in enumerate(rotationspace):
-            corr = temp.correlate(imageft)
-            s, dx, dy = corr.find_peak(1)
-            
-            if s > smax:
-                smax = s
-                idxmax = idx
-        
-        print("angle found",rotangles[idxmax] )
-        
-        rotalgimage = deepcopy(image)
-        rotalgimage.rotate(-rotangles[idxmax])
-        
-        rotalgimageft = ImgFFT(rotalgimage)
-        rotalgimageft.ft()
-        
-        corr = rotalgimageft.correlate(tempft)
-        
-        dx, dy = corr.find_translation(1)
-        
-        print("shifts:", dx, dy)
-        
-        rotalgimage.move(dx, dy)
-        # distance
-        print("distance")
-        print(distance(datatrans[i][1], rotangles[idxmax]),
-              distance(datatrans[i][2], -dx),
-              distance(datatrans[i][3], -dy)
-              )        
-        
-        rotalgimage.show_image()
-        plt.show()
-        algimg.append(rotalgimage)
+#    # test the average
+#    from ImageFFT_class import ImgFFT
+#    
+#    # lena is the template
+#    template = deepcopy(mypic)
+#    tempft = ImgFFT(template)
+#    tempft.ft()
+#    
+#    # construct a rotation space for the template
+#    rotangles = [x for x in range(-10,10,1)]
+#    
+#    rotationspace = []
+##    for angle in rotangles:
+##        print("rotating template angle:", angle)
+##        temprot = deepcopy(template)
+##        temprot.rotate(angle)
+##        temprotft = ImgFFT(temprot)
+##        temprotft.ft()
+##        rotationspace.append(temprotft)
+#    
+#    # construct a dataset with randomly moved and rotated images
+#    
+#    np.random.seed(5)
+#    dataset = []
+#    datasetangles = []
+#    datasetshifts = []
+#    
+#    datatrans = []
+#    
+#    print("------------------------------")
+#    print("creating dataset")
+#    print("------------------------------")
+#
+#    angle_list = np.arange(-20, 20, 5)    
+#    for i, ngle in enumerate(angle_list):
+#        image = deepcopy(mypic)
+#        anglefirst = False if np.random.randint(0,2) == 0 else True
+#        
+##        angle = np.random.randint(-10, 10)
+##        dx = np.random.randint(-50, 50)
+##        dy = np.random.randint(-50, 50)
+#
+#        anglefirst = True
+#        angle = angle_list[i]
+#        print(angle)
+#        dx = 0
+#        dy = 0
+#        
+#        datatrans.append((anglefirst, angle, dx, dy))
+#        
+#        if anglefirst:
+#            datasetangles.append(angle)
+#            image.rotate(angle)
+#
+#            datasetshifts.append((dx,dy))
+#            image.move(dx, dy)
+#        else:
+#            datasetshifts.append((dx,dy))
+#            image.move(dx, dy) 
+#
+#            datasetangles.append(angle)
+#            image.rotate(angle)
+#        
+#        print(datatrans[i])
+#           
+#        image.show_image()
+#        plt.show()
+#        dataset.append(image)
+#    
+#    # for each image test the rotation against the template
+#    print("------------------------------")
+#    print("Align dataset")
+#    print("------------------------------")  
+#    
+#    def distance(x, y):
+#        d = np.sqrt((y-x)**2)
+#        return d
+#    
+#    algimg = []
+#    for i, image in enumerate(dataset):
+#        print("original transformation: ", datatrans[i])
+#        imageft = ImgFFT(image)
+#        imageft.ft()
+#
+##        smax = 0
+##        idxmax = 0
+##        for idx, temp in enumerate(rotationspace):
+##            corr = temp.correlate(imageft)
+##            s, dx, dy = corr.find_peak(1)
+##            
+##            
+##            
+##            if s > smax:
+##                smax = s
+##                idxmax = idx
+##        
+##        print("angle found",rotangles[idxmax] )
+#        
+#        rotalgimage = deepcopy(image)
+##        rotalgimage.rotate(-rotangles[idxmax])
+#        
+#        rotalgimageft = ImgFFT(rotalgimage)
+#        rotalgimageft.ft()
+#        
+#        corr = rotalgimageft.correlate(tempft)
+#        
+#
+#        
+#        dx, dy = corr.find_translation(1)
+#
+#        corr.show_image()
+#        corr.show_translation(dx, dy)
+#        plt.show()
+#        
+#        print("shifts:", dx, dy)
+#        
+#        rotalgimage.move(dx, dy)
+#        # distance
+##        print("distance")
+##        print(distance(datatrans[i][1], rotangles[idxmax]),
+##              distance(datatrans[i][2], -dx),
+##              distance(datatrans[i][3], -dy)
+##              )        
+##        
+#        rotalgimage.show_image()
+#        plt.show()
+#        algimg.append(rotalgimage)
         
 
         

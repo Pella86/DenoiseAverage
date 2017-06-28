@@ -18,13 +18,21 @@ from skimage import color
 
 
 # py imports
-from os.path import isdir, isfile, join, splitext
+from os.path import isdir, isfile, join, splitext, split
 from os import listdir, mkdir
 import logging as lg
 from copy import deepcopy
 
 # My imports
 from MyRGBImage_class import MyRGBImg
+
+
+        
+def get_pathname(path):
+    ''' Little function to split the path in path, name, extension'''
+    path, nameext = split(path)
+    name, ext = splitext(nameext)
+    return path, name, ext 
 
 
 class AvgRGB(object):
@@ -53,8 +61,7 @@ class AvgRGB(object):
         self.avg = MyRGBImg()
         self.algs = []
         self.algimgs = []
-        
-        
+       
     
     def gather_pictures(self):
         # for now gathe all the files, next check for picture extensions
@@ -62,11 +69,13 @@ class AvgRGB(object):
         self.names = [f for f in listdir(p) if isfile(join(p, f))]
         
         for imgname in self.names:
-            imagepath = join(self.path, imgname)
-            img = MyRGBImg()
-            img.read_from_file(imagepath)
-            self.imgs.append(img)
-            lg.info("Image: {0} imported successfully".format(imagepath))
+            path, name, ext = get_pathname(imgname)
+            if ext in ['.png', '.jpg']:
+                imagepath = join(self.path, imgname)
+                img = MyRGBImg()
+                img.read_from_file(imagepath)
+                self.imgs.append(img)
+                lg.info("Image: {0} imported successfully".format(imagepath))
 
     def average(self, aligned = True):
         if aligned:
@@ -178,15 +187,19 @@ class AvgRGB_savememory(object):
         myimg.read_from_file(pathtopic)
         return myimg       
     
-    def save_alg_iamage(self, index, algimg):
+    def save_alg_image(self, index, algimg):
         filename, ext = splitext(self.imgs_names[index])
         algimg.save(join(self.subfolders["aligned_rgb_images"], ("alg_" + filename + ".png" )))        
     
     def gather_pictures_names(self):
         # for now gathe all the files, next check for picture extensions
         p = self.path
-        self.imgs_names = [f for f in listdir(p) if isfile(join(p, f))]
         
+        filenames = [f for f in listdir(p) if isfile(join(p, f))]
+        for filename in filenames:
+            path, name, ext = get_pathname(filename)
+            if ext in ['.png', '.jpg']:       
+                self.imgs_names.append(filename)
 
     def average(self, aligned = True, debug = False):
         sizedataset = len(self.imgs_names)
@@ -220,8 +233,9 @@ class AvgRGB_savememory(object):
         
         self.algs = []
         for line in lines:
-            data = line.split(' | ')
-            data = [int(d.strip()) for d in data]
+            sdata = line.split(' | ')
+            sdata = [d.strip() for d in sdata]
+            data = [int(sdata[0]), int(sdata[1]), float(sdata[2])]
             self.algs.append(data)
         lg.info("Alignments imported successfully")
         
@@ -230,14 +244,34 @@ class AvgRGB_savememory(object):
         for i in range(len(self.imgs_names)):
             if debug:
                 print("Aligning image:", i)
+                print("algs:", self.algs[i])
             
             # load picture to align
             algimage = self.get_image(i)
 
-            algimage.move(-self.algs[i][1], -self.algs[i][0])
+            algimage.move(-self.algs[i][0], -self.algs[i][1])
+            
+            dimx = algimage.data.shape[0]
+            dimy = algimage.data.shape[1]
+            cx = dimx / 2
+            cy = dimy / 2
+            
+            if dimx > dimy:
+                ncx = cx - cy
+                ncy = 0
+            elif dimx < dimy:
+                ncx = 0
+                ncy = cy - cx
+            else:
+                ncx = 0
+                ncy = 0                
+            
+            rotalg = True
+            if rotalg:
+                algimage.rotate(self.algs[i][2], (ncx, ncy))
             
             # save the image
-            self.save_alg_iamage(i, algimage)
+            self.save_alg_image(i, algimage)
             
         lg.info("Images aligned successfully")
 
@@ -265,7 +299,7 @@ class AvgRGB_savememory(object):
 
 if __name__ == "__main__":
     
-    pathtodataset = "../../../silentcam/dataset25/"
+    pathtodataset = "../../../silentcam/dataset34/"
     
 #    avg = AvgRGB(pathtodataset)
 #    avg.gather_pictures()
@@ -277,8 +311,8 @@ if __name__ == "__main__":
     avg = AvgRGB_savememory(pathtodataset)
     avg.gather_pictures_names()
     avg.load_algs()
-    avg.align_images(debug = True)
-    avg.average(debug = True)
+    #avg.align_images(debug = True)
+    avg.average(aligned = False, debug = True)
     avg.save_avg()
     
     import winsound
