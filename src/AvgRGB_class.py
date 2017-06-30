@@ -221,11 +221,14 @@ class AvgRGB_savememory(object):
                 picture = self.get_image(i)
             # convert both to lab
             im = color.rgb2lab(picture.data)
+
             #perform operations
             s += im 
             
         s = s / float(sizedataset)
         self.avg = MyRGBImg(color.lab2rgb(s))
+        self.avg.transpose()
+        self.avg.rotate(90)
        
     def load_algs(self):
         with open(join(self.subfolders["results"], "shifts_log.txt")) as f:
@@ -248,27 +251,14 @@ class AvgRGB_savememory(object):
             
             # load picture to align
             algimage = self.get_image(i)
+            
+            algimage.squareit()
 
-            algimage.move(-self.algs[i][0], -self.algs[i][1])
-            
-            dimx = algimage.data.shape[0]
-            dimy = algimage.data.shape[1]
-            cx = dimx / 2
-            cy = dimy / 2
-            
-            if dimx > dimy:
-                ncx = cx - cy
-                ncy = 0
-            elif dimx < dimy:
-                ncx = 0
-                ncy = cy - cx
-            else:
-                ncx = 0
-                ncy = 0                
-            
             rotalg = True
             if rotalg:
-                algimage.rotate(self.algs[i][2], (ncx, ncy))
+                algimage.rotate(-self.algs[i][2])
+            
+            algimage.move(-self.algs[i][0], -self.algs[i][1])
             
             # save the image
             self.save_alg_image(i, algimage)
@@ -307,12 +297,19 @@ if __name__ == "__main__":
 #    avg.align_images()
 #    avg.average()
 #    avg.save_avg()
-
+    from LogTimes import TimingsTot
+    
+    t = TimingsTot(pathtodataset + "time_logfile.log")
+    
     avg = AvgRGB_savememory(pathtodataset)
     avg.gather_pictures_names()
+    t.logtimestr("Loaded names")
     avg.load_algs()
-    #avg.align_images(debug = True)
-    avg.average(aligned = False, debug = True)
+    t.logtimestr("Loaded aligments")
+    avg.align_images(debug = True)
+    t.logtimestr("Aligned Images")
+    avg.average(aligned = True, debug = True)
+    t.logtimestr("Averaged Images")
     avg.save_avg()
     
     import winsound

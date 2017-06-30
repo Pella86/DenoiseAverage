@@ -20,7 +20,6 @@ from os.path import isdir, isfile, join, splitext, split
 from os import listdir, mkdir
 from copy import deepcopy
 import logging as lg
-import pickle
 
 # My imports
 from MyImage_class import MyImage
@@ -35,6 +34,13 @@ class TemplateTypeError(Exception):
        self.value = value
    def __str__(self):
        return "Wrong template type: " + repr(self.value)
+
+
+def get_pathname(path):
+    ''' Little function to split the path in path, name, extension'''
+    path, nameext = split(path)
+    name, ext = splitext(nameext)
+    return path, name, ext
 
 #==============================================================================
 # Class Average Folder
@@ -81,13 +87,15 @@ class AvgFolder(object):
         # for now gather all the files, next check for picture extensions
         p = self.path
         self.names = [f for f in listdir(p) if isfile(join(p, f))]
-
+            
         for imgname in self.names:
-            imagepath = join(self.path, imgname)
-            img = MyImage()
-            img.read_from_file(imagepath)
-            self.imgs.append(img)
-            lg.info("Image: {0} imported successfully".format(imagepath))
+            path, name, ext = get_pathname(imgname)
+            if ext in ['.jpg', '.png']:
+                imagepath = join(self.path, imgname)
+                img = MyImage()
+                img.read_from_file(imagepath)
+                self.imgs.append(img)
+                lg.info("Image: {0} imported successfully".format(imagepath))
 
     def makeavgdir(self):
         # create a folder average into the dataset path
@@ -221,7 +229,7 @@ class AvgFolder(object):
             self.algimgs.append(rotalgimage)
             
             if debug:
-                print("Correlate image:", c)            
+                print("Correlated image:", c)            
             lg.info("correlated image n: " + str(c))
             
             c += 1
@@ -329,11 +337,7 @@ class AvgFolder(object):
 # Class Average Folder Save Memory
 #==============================================================================
 
-def get_pathname(path):
-    ''' Little function to split the path in path, name, extension'''
-    path, nameext = split(path)
-    name, ext = splitext(nameext)
-    return path, name, ext
+
 
 class BaseArray:
     
@@ -653,9 +657,6 @@ class AvgFolderMem(object):
             c += 1
     
     def average(self, aligned = True):
-#        self.imgs.i = 0
-#        self.algimgs.i = 0
-        
         if aligned:
             dataset = self.algimgs
         else:
@@ -791,11 +792,14 @@ class AnalyzeShifts:
         
         ax.bar(myangles, myfreq, width = 0.05)
         ax.axis((xmin, xmax, 0, ymax))
+        plt.savefig(join(self.path, 'angles_plot.png'), dpi = 600)
         plt.show()
         
-if __name__ == "__main__":
 
- 
+        
+if __name__ == "__main__":
+    
+    sound = True
     
 #    testdatasetpath = "../../../silentcam/testdataset/"
 #    template_folder = join(testdatasetpath, "template_folder")
@@ -841,7 +845,7 @@ if __name__ == "__main__":
 #    
 #    
 #    with open(join(logpathdir, "mytransformations.log"), 'w') as f:
-#        for i in range(5):
+#        for i in range(10):
 #            image = deepcopy(mypic)
 #           
 #            anglefirst = False if np.random.randint(0,2) == 0 else True
@@ -874,21 +878,31 @@ if __name__ == "__main__":
 #            
 #            image.save(join(testdatasetpath, "pic_" + str(i) + ".png"))                                         
 #
-
+    
+    # test for timings
+    memsave = True
+    
+    if memsave:
+        title = "MEMSAVE"
+    else:
+        title = "LOAD IN MEM"
+    
 
 
     from LogTimes import TimingsTot
     
-    mypath = "../../../silentcam/dataset10/"
+    mypath = "../../../silentcam/testdataset/"
     
-    t = TimingsTot(mypath + "time_logfile.log")
+    t = TimingsTot(mypath + "time_logfile.log", title)
 
     print("------------------------------")
     print("Loading dataset")
     print("------------------------------")  
 
-    
-    avg = AvgFolderMem(mypath)
+    if memsave:
+        avg = AvgFolderMem(mypath)
+    else:
+        avg = AvgFolder(mypath)
     avg.gather_pictures()
     avg.c2gscale()
     avg.squareit()
@@ -906,7 +920,7 @@ if __name__ == "__main__":
 #    custom_template.read_from_file(join(template_folder, "template.png"))
 #    custom_template.convert2grayscale()
 
-    avg.generate_template("UseFirstImage", (-1.6, 0.4, 0.1))
+    avg.generate_template("UseFirstImage", (-1, 1, 0.1))
     avg.save_template()
     
     avg.template.show_image()
@@ -940,12 +954,12 @@ if __name__ == "__main__":
         avg.avg.show_image()
         plt.show() 
         avg.avg.inspect()
-#        
         
-    a = AnalyzeShifts("../../../silentcam/dataset10/avg/results/shifts_log.txt")
-    
-    a.plot_xy()
-    a.plot_angles()
+        
+#    a = AnalyzeShifts("../../../silentcam/dataset34/avg/results/shifts_log.txt")
+#    
+#    a.plot_xy()
+#    a.plot_angles()
         
         
 #    mypath = "../../silentcam/dataset25/"
@@ -980,3 +994,9 @@ if __name__ == "__main__":
 #        avg.save_avg()
 #        avg.avg.show_image()
 #        plt.show()
+
+    if sound:
+        import winsound
+        Freq = 2500 # Set Frequency To 2500 Hertz
+        Dur = 1000 # Set Duration To 1000 ms == 1 second
+        winsound.Beep(Freq,Dur)

@@ -14,13 +14,16 @@ import time
 # Timing utils
 
 class TimingsTot:
-    def __init__(self, path = None, debug_mode = True):
+    def __init__(self, path = None, title = "insert date time here", debug_mode = True):
         self.starttime = time.perf_counter()
         self.nowtime = time.perf_counter()
         self.lastcall = time.perf_counter()
         
         self.logfilepath = path
         self.debug_mode = debug_mode
+        
+        with open(self.logfilepath, 'a') as f:
+            f.write("--------"+ title + "---------\n")
     
     def convert_in_ddhhss(self, seconds):
         hh = 0

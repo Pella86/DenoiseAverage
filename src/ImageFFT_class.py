@@ -17,7 +17,7 @@ from numpy import fft
 from copy import deepcopy
 
 # my imports
-from MyImage_class import MyImage, Corr
+from MyImage_class import MyImage, Corr, Mask
 
 
 #==============================================================================
@@ -168,15 +168,17 @@ class ImgFFT(object):
             for y in range(sizeimg[1]):
                 my = y - sizeimg[1] / 2
                 mx = x - sizeimg[0] / 2
-                
-                phi = np.arctan2(my, mx)
+                if mx != 0:
+                    phi = np.arctan(my / float(mx))
+                else:
+                    phi = 0
                 r   = np.sqrt(mx**2 + my **2)
                 
                 ix = map_range(phi, -np.pi, np.pi, sizeimg[0], 0)
                 iy = map_range(r, 0, sizeimg[0], 0, sizeimg[1])
 
                 if ix >= 0 and ix < sizeimg[0] and iy >= 0 and iy < sizeimg[1]:
-                    pol[y][x] =  mag.data[int(ix)][int(iy)]    
+                    pol[x][y] =  mag.data[int(ix)][int(iy)]    
         pol = MyImage(pol)
         pol.limit(1)
         return pol
@@ -235,7 +237,7 @@ if __name__ == "__main__":
     imagepath = "C:/Users/Mauro/Desktop/Vita Online/Programming/Picture cross corr/Lenna.png"
     imagepath = "C:/Users/Mauro/Desktop/Vita Online/Programming/Picture cross corr/silentcam/dataset24/avg/correlation_images/corr_1497777846958.png"
     
-    imagepath = "../../../pitemplate.png"
+    imagepath = "../../../Lenna.png"
   
 #    # convert range test
 #    x = np.arange(0, 3, 0.1)
@@ -281,15 +283,64 @@ if __name__ == "__main__":
 #    p = ft.get_phases()
 #    p.show_image()
 #    plt.show()
-#    
+#
+
+
+    testfolder= "../../../fftfun/PolarFFT/"
+    
     print("Polar t pic")    
     p = ft.get_polar_t()
     p.show_image()
     plt.show()
-        
+
+    imft = ImgFFT(p)
+    imft.ft() 
     
+    tsx = []
+    tsy = []
+    arange = np.arange(0, 90 + 10, 10)
+    for i in arange:
+        print("---------Angle: ", i,"----------")
 
+        myrot = deepcopy(im)    
+        myrot.rotate(i)    
+        myrot.show_image()
+        plt.show()
+    
+        ftrot = ImgFFT(myrot)
+        ftrot.ft()
+ 
+        prot = ftrot.get_polar_t()
+        prot.show_image()
+        plt.show()  
 
+        prot.save(testfolder + "prot.png")    
+    
+        # fft correlation between im and prot
+        protft = ImgFFT(prot)
+        protft.ft()
+        
+        
+        corr = imft.correlate(ftrot)
+        corr.save(testfolder + "corrcorr.png")
+        dx,dy = corr.find_translation(1)
+        
+        corr.show_image()
+        a = corr.show_translation(dx, dy)
+        tsx.append(a[0])
+        tsy.append(a[1])
+    
+        print(dx, dy)  
+        
+        dx = float(dx)
+        dy = float(dy)
+        angle = np.sqrt(dx*dx + dy*dy)
+        print(angle)  
+        print("---------Angle: ", i,"----------")
+    plt.show()
+    
+    plt.plot(tsx, tsy, 'ro')
+    plt.show()
 #    re = ft.resize_image(100, 100)
 #    re.show_image()
 #    plt.show()

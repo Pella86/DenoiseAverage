@@ -61,7 +61,7 @@ class MyImage(object):
         m = np.max(pospic)
         npic = pospic / float(m)
         data = 1 - npic     
-        plt.imshow(np.transpose(data), cmap = "Greys")    
+        plt.imshow((data), cmap = "Greys")    
 
     
     # I/O functions
@@ -217,9 +217,10 @@ class Corr(MyImage):
         return int(dx), int(dy)
     
     def show_translation(self, dx, dy):
-        odx = dx + self.data.shape[0]/2
-        ody = self.data.shape[1]/2 - dy
-        plt.scatter(odx, ody, s=40, alpha = .5)       
+        ody = dx + self.data.shape[0]/2
+        odx = self.data.shape[1]/2 - dy
+        plt.scatter(odx, ody, s=40, alpha = .5)    
+        return odx, ody
 
 
 class Mask(MyImage):
@@ -292,6 +293,8 @@ if __name__ == "__main__":
     
     myrot.show_image()
     plt.show()  
+    
+    
     # at theoretical level the precision can be to the 100th of degree...
 #    angles = [10, 29.999, 30, 30.001]
 #    myrots = []

@@ -137,9 +137,28 @@ class MyRGBImg(object):
             ch = self.get_channel(c)
             ch.rotate(angle, center)
             self.set_channel(ch, c)
-        
     
+    def squareit(self):
+        lx = self.data.shape[0]
+        ly = self.data.shape[1]
         
+        dim = ly if lx > ly else lx
+        
+        newpic = MyRGBImg(data = np.zeros((dim, dim, 3)))
+
+        for c in range(3):
+            ch = self.get_channel(c)
+            ch.squareit()
+            newpic.set_channel(ch, c)
+        
+        self.data = newpic.data
+    
+    def transpose(self):
+        for c in range(3):
+            ch = self.get_channel(c)
+            ch.transpose()
+            self.set_channel(ch, c)
+   
     
 if __name__ == "__main__":
     # load a sample rgb picture
@@ -151,9 +170,11 @@ if __name__ == "__main__":
     
     myimg = MyRGBImg()
     myimg.read_from_file(path)
+    myimg.squareit()
     
     myimg.show_image()
     plt.show()
+    
     
     myimg.inspect('r')
     
