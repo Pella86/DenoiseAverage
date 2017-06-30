@@ -22,13 +22,15 @@ class MyImage(object):
     
     # initialization functions
     
-    def __init__(self, data = np.zeros((5,5))):
-        
+    def __init__(self, data = np.zeros((5,5))):    
         if type(data) == np.ndarray:
             self.data = data
-        elif isinstance(data, tuple):
+        elif type(data) == tuple:
             if len(data) == 2:
                 self.data = np.zeros(data)
+        elif type(data) == str:
+            # shall i check for path being an image?
+            self.read_from_file(data)
         else:
             raise ValueError("data type not supported")
             
@@ -59,7 +61,7 @@ class MyImage(object):
         m = np.max(pospic)
         npic = pospic / float(m)
         data = 1 - npic     
-        plt.imshow(np.transpose(data), cmap = "Greys")    
+        plt.imshow((data), cmap = "Greys")    
 
     
     # I/O functions
@@ -147,7 +149,8 @@ class MyImage(object):
         return Corr(corr)
 
     def limit(self, valmax):
-        mi = np.min(self.data)
+        mi = self.data.min()
+        mi = np.abs(mi)
         pospic = self.data + mi
         m = np.max(pospic)
         npic = pospic / float(m)
@@ -155,6 +158,37 @@ class MyImage(object):
     
     def apply_mask(self, mask):
         self.data = self.data * mask.data
+        
+    def rotate(self, deg, center = (0,0)):
+#where c is the cosine of the angle, s is the sine of the angle and x0, y0 are used to correctly translate the rotated image. In psedudocode
+
+        src_dimsx = self.data.shape[0]
+        src_dimsy = self.data.shape[1]
+ 
+        rad = np.deg2rad(deg)
+        c = np.cos(rad)
+        s = np.sin(rad)
+        
+        cx = center[0] + src_dimsx/2
+        cy = center[1] + src_dimsy/2
+
+        x0 = cx - c*cx - s*cx
+        y0 = cy - c*cy + s*cy
+
+        dest = MyImage(self.data.shape)
+        
+        for y in range(src_dimsy):
+            for x in range(src_dimsx):
+                src_x = int(c*x + s*y + x0)
+                src_y = int(-s*x + c*y + y0)
+                if src_y > 0 and src_y < src_dimsy and src_x > 0 and src_x < src_dimsx:
+                    dest.data[x][y] = self.data[src_x][src_y]
+                    
+        
+        self.data = dest.data
+
+    
+         
         
 
 class Corr(MyImage):
@@ -183,9 +217,10 @@ class Corr(MyImage):
         return int(dx), int(dy)
     
     def show_translation(self, dx, dy):
-        odx = dx + self.data.shape[0]/2
-        ody = self.data.shape[1]/2 - dy
-        plt.scatter(odx, ody, s=40, alpha = .5)       
+        ody = dx + self.data.shape[0]/2
+        odx = self.data.shape[1]/2 - dy
+        plt.scatter(odx, ody, s=40, alpha = .5)    
+        return odx, ody
 
 
 class Mask(MyImage):
@@ -235,11 +270,12 @@ class Mask(MyImage):
     
     
 if __name__ == "__main__":
-    mypicname = "../../../griglia.png"
+    mypicname = "../../../Lenna.png"
     mypic = MyImage()
     mypic.read_from_file(mypicname)
     mypic.squareit()
     mypic.convert2grayscale()
+    mypic.binning(0)
     mypic.normalize()
     
     mypic.show_image()
@@ -251,6 +287,186 @@ if __name__ == "__main__":
     movpic.show_image()
     plt.show()
     
+    myrot = deepcopy(mypic)
+    myrot.rotate(45, center = (0, 0))
+    myrot.normalize()
+    
+    myrot.show_image()
+    plt.show()  
+    
+    
+    # at theoretical level the precision can be to the 100th of degree...
+#    angles = [10, 29.999, 30, 30.001]
+#    myrots = []
+#    for angle in angles:
+#        myrot10 = deepcopy(mypic)
+#        myrot10.rotate(angle)
+#        myrot10.normalize()
+#        myrot10.show_image()
+#        plt.show()
+#        myrots.append(myrot10)
+#
+#    from ImageFFT_class import ImgFFT
+#    myrotft = ImgFFT(myrot)
+#    myrotft.ft()
+#    smax = 0
+#    for i, rot in enumerate(myrots):
+#        # find rotation
+#        
+#        rotft = ImgFFT(rot)
+#        rotft.ft()       
+#        cc = myrotft.correlate(rotft)
+#        cc.show_image()
+#        s, dx, dy = cc.find_peak(1)
+#        plt.show()
+#        print("my angle:", angles[i])
+#        print(dx, dy, s)
+#    
+#    xarr = [i * 10 + 10 for i in range(20)]
+#    yarr = [np.rad2deg(1 / float(x)) for x in xarr]    
+#        
+#    plt.scatter(xarr, yarr)
+#    plt.show()
+    
+#    # test the average
+#    from ImageFFT_class import ImgFFT
+#    
+#    # lena is the template
+#    template = deepcopy(mypic)
+#    tempft = ImgFFT(template)
+#    tempft.ft()
+#    
+#    # construct a rotation space for the template
+#    rotangles = [x for x in range(-10,10,1)]
+#    
+#    rotationspace = []
+##    for angle in rotangles:
+##        print("rotating template angle:", angle)
+##        temprot = deepcopy(template)
+##        temprot.rotate(angle)
+##        temprotft = ImgFFT(temprot)
+##        temprotft.ft()
+##        rotationspace.append(temprotft)
+#    
+#    # construct a dataset with randomly moved and rotated images
+#    
+#    np.random.seed(5)
+#    dataset = []
+#    datasetangles = []
+#    datasetshifts = []
+#    
+#    datatrans = []
+#    
+#    print("------------------------------")
+#    print("creating dataset")
+#    print("------------------------------")
+#
+#    angle_list = np.arange(-20, 20, 5)    
+#    for i, ngle in enumerate(angle_list):
+#        image = deepcopy(mypic)
+#        anglefirst = False if np.random.randint(0,2) == 0 else True
+#        
+##        angle = np.random.randint(-10, 10)
+##        dx = np.random.randint(-50, 50)
+##        dy = np.random.randint(-50, 50)
+#
+#        anglefirst = True
+#        angle = angle_list[i]
+#        print(angle)
+#        dx = 0
+#        dy = 0
+#        
+#        datatrans.append((anglefirst, angle, dx, dy))
+#        
+#        if anglefirst:
+#            datasetangles.append(angle)
+#            image.rotate(angle)
+#
+#            datasetshifts.append((dx,dy))
+#            image.move(dx, dy)
+#        else:
+#            datasetshifts.append((dx,dy))
+#            image.move(dx, dy) 
+#
+#            datasetangles.append(angle)
+#            image.rotate(angle)
+#        
+#        print(datatrans[i])
+#           
+#        image.show_image()
+#        plt.show()
+#        dataset.append(image)
+#    
+#    # for each image test the rotation against the template
+#    print("------------------------------")
+#    print("Align dataset")
+#    print("------------------------------")  
+#    
+#    def distance(x, y):
+#        d = np.sqrt((y-x)**2)
+#        return d
+#    
+#    algimg = []
+#    for i, image in enumerate(dataset):
+#        print("original transformation: ", datatrans[i])
+#        imageft = ImgFFT(image)
+#        imageft.ft()
+#
+##        smax = 0
+##        idxmax = 0
+##        for idx, temp in enumerate(rotationspace):
+##            corr = temp.correlate(imageft)
+##            s, dx, dy = corr.find_peak(1)
+##            
+##            
+##            
+##            if s > smax:
+##                smax = s
+##                idxmax = idx
+##        
+##        print("angle found",rotangles[idxmax] )
+#        
+#        rotalgimage = deepcopy(image)
+##        rotalgimage.rotate(-rotangles[idxmax])
+#        
+#        rotalgimageft = ImgFFT(rotalgimage)
+#        rotalgimageft.ft()
+#        
+#        corr = rotalgimageft.correlate(tempft)
+#        
+#
+#        
+#        dx, dy = corr.find_translation(1)
+#
+#        corr.show_image()
+#        corr.show_translation(dx, dy)
+#        plt.show()
+#        
+#        print("shifts:", dx, dy)
+#        
+#        rotalgimage.move(dx, dy)
+#        # distance
+##        print("distance")
+##        print(distance(datatrans[i][1], rotangles[idxmax]),
+##              distance(datatrans[i][2], -dx),
+##              distance(datatrans[i][3], -dy)
+##              )        
+##        
+#        rotalgimage.show_image()
+#        plt.show()
+#        algimg.append(rotalgimage)
+        
+
+        
+        
+            
+            
+            
+    
+    # then rotate it and test the shifts
+    
+    
+    
     # test correlation
 #    cc = mypic.correlate(movpic)
 #    
@@ -260,9 +476,9 @@ if __name__ == "__main__":
 #    cc.show_translation(dx, dy)
 #    plt.show()
     
-    mypic.create_composite_right(movpic)
-
-    mypic.show_image()
-    plt.show()
-    
+#    mypic.create_composite_right(movpic)
+#
+#    mypic.show_image()
+#    plt.show()
+#    
     

@@ -32,7 +32,28 @@ class MyRGBImg(object):
     def read_from_file(self, filepathname, normalize = True):
         # import image from file
         # todo warnings about file existing
-        self.data = mpimg.imread(filepathname)
+        img = mpimg.imread(filepathname)
+        img = MyRGBImg(img)
+        
+        
+        if img.data.shape[2] == 4:
+            colors = []
+            for i in range(3):
+                channel = img.get_channel(i)
+                colors.append(channel)
+            
+            # initializate the image
+            myimage = MyRGBImg(data = np.zeros((img.data.shape[0],
+                                                img.data.shape[1],
+                                                3)))
+            for i in range(3):
+                channel = colors[i]
+                channel.data = np.transpose(channel.data)
+                myimage.set_channel(channel, i)
+            self.data = myimage.data
+        else:
+            self.data = img.data
+        
         if normalize:
             self.limit(1)
 
@@ -57,17 +78,31 @@ class MyRGBImg(object):
             self.data = npic * valmax
 
     def get_channel(self, channel):
-        c2idx ={'r':0, 'g':1, 'b':2}
+        if type(channel) == str:
+            c2idx ={'r':0, 'g':1, 'b':2}
+        else:
+            c2idx = [0, 1, 2]
         return MyImage(self.data[:,:,c2idx[channel]])
     
     def set_channel(self, image, channel):
-        c2idx ={'r':0, 'g':1, 'b':2}
+        if type(channel) == str:
+            c2idx ={'r':0, 'g':1, 'b':2}
+        else:
+            c2idx = [0, 1, 2]
         img = image.data
-        self.data[:,:,c2idx[channel]] = img.transpose()
+        #hack... don't know whyp
+        datadimx = self.data.shape[0]
+        datadimy = self.data.shape[1]
+        imgdimx = img.shape[0]
+        imgdimy = img.shape[1]
+        if imgdimx != datadimx or imgdimy != datadimy:
+            img = np.transpose(img)
+
+        self.data[:,:,c2idx[channel]] = img
     
     def move(self, idx, idy):
-        dx = idy
-        dy = -idx
+        dx = idx
+        dy = -idy
         mpic = np.zeros(self.data.shape)
         mpiclenx = mpic.shape[0]
         mpicleny = mpic.shape[1]
@@ -79,10 +114,6 @@ class MyRGBImg(object):
                 if xdx >= 0 and xdx < mpiclenx and ydy >= 0 and ydy < mpicleny:
                     for c in range(3):
                         mpic[x][y][c] = self.data[xdx][ydy][c]
-                        if mpic[x][y][c] <= 0:
-                            mpic[x][y][c] = 0
-                        if mpic[x][y][c] >= 1:
-                            mpic[x][y][c] = 1
         self.data = mpic
     
     # operator overload    
@@ -99,18 +130,51 @@ class MyRGBImg(object):
         
         return MyRGBImg(rpic)
     
+    def rotate(self, angle, center = (0,0)):
+        # split channels
+        angle = -angle
+        for c in range(3):
+            ch = self.get_channel(c)
+            ch.rotate(angle, center)
+            self.set_channel(ch, c)
+    
+    def squareit(self):
+        lx = self.data.shape[0]
+        ly = self.data.shape[1]
         
+        dim = ly if lx > ly else lx
+        
+        newpic = MyRGBImg(data = np.zeros((dim, dim, 3)))
+
+        for c in range(3):
+            ch = self.get_channel(c)
+            ch.squareit()
+            newpic.set_channel(ch, c)
+        
+        self.data = newpic.data
+    
+    def transpose(self):
+        for c in range(3):
+            ch = self.get_channel(c)
+            ch.transpose()
+            self.set_channel(ch, c)
+   
     
 if __name__ == "__main__":
     # load a sample rgb picture
 
-    path = "../../silentcam/dataset25/1497791410073.jpg"
+    path = "../../../silentcam/dataset25/1497791410073.jpg"
+    path = "../../../silentcam/dataset25/avg/aligned_rgb_images/alg_1497791410073.png"
+    path = "../../../Lenna.png"
+    path = "../../../images.png"
     
     myimg = MyRGBImg()
     myimg.read_from_file(path)
+    myimg.squareit()
     
     myimg.show_image()
     plt.show()
+    
     
     myimg.inspect('r')
     
@@ -121,8 +185,12 @@ if __name__ == "__main__":
     
     mvimg.inspect('r')
     
-    path = "../../silentcam/dataset25/rgbtest/mov_1497791410073.png"
-    mvimg.save(path)
-    
-    
+#    path = "../../../silentcam/dataset25/rgbtest/mov_1497791410073.png"
+#    mvimg.save(path)
+
+    # rotate image
+    rotimg = deepcopy(myimg)
+    rotimg.rotate(10, ( -88, 0))
+    rotimg.show_image()
+    plt.show()    
     
