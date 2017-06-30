@@ -656,13 +656,15 @@ class AvgFolderMem(object):
             
             c += 1
     
-    def average(self, aligned = True):
+    def average(self, aligned = True, debug = False):
         if aligned:
             dataset = self.algimgs
         else:
             dataset = self.imgs
         s = MyImage(np.zeros(dataset[0].data.shape))
-        for picture in dataset:
+        for i, picture in enumerate(dataset):
+            if debug:
+                print("Averaging picture:", i)
             s += picture
         
         
@@ -891,7 +893,7 @@ if __name__ == "__main__":
 
     from LogTimes import TimingsTot
     
-    mypath = "../../../silentcam/testdataset/"
+    mypath = "../../../silentcam/dataset36/"
     
     t = TimingsTot(mypath + "time_logfile.log", title)
 
