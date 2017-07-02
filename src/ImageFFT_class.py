@@ -225,7 +225,9 @@ class ImgFFT(object):
                 xu = int(l2x + sizex / 2)
                 yl = int(l2y - sizey / 2)
                 yu = int(l2y + sizey / 2)
-                fftresized = myFFT(self.imgfft[xl : xu, yl : yu])
+                imgfft = np.array(self.imgfft[xl : xu, yl : yu])
+                fftresized = myFFT(imgfft)
+                
                 return fftresized.ift()
                 
                 
@@ -257,6 +259,11 @@ if __name__ == "__main__":
    
     ft = ImgFFT(im)
     ft.ft()
+    
+    imres = ft.resize_image(256, 256)
+    imres.show_image()
+    plt.show()
+    
 
 #    print("Power Spectrum")    
 #    ps = ft.power_spectrum()    
@@ -286,61 +293,61 @@ if __name__ == "__main__":
 #
 
 
-    testfolder= "../../../fftfun/PolarFFT/"
-    
-    print("Polar t pic")    
-    p = ft.get_polar_t()
-    p.show_image()
-    plt.show()
-
-    imft = ImgFFT(p)
-    imft.ft() 
-    
-    tsx = []
-    tsy = []
-    arange = np.arange(0, 90 + 10, 10)
-    for i in arange:
-        print("---------Angle: ", i,"----------")
-
-        myrot = deepcopy(im)    
-        myrot.rotate(i)    
-        myrot.show_image()
-        plt.show()
-    
-        ftrot = ImgFFT(myrot)
-        ftrot.ft()
- 
-        prot = ftrot.get_polar_t()
-        prot.show_image()
-        plt.show()  
-
-        prot.save(testfolder + "prot.png")    
-    
-        # fft correlation between im and prot
-        protft = ImgFFT(prot)
-        protft.ft()
-        
-        
-        corr = imft.correlate(ftrot)
-        corr.save(testfolder + "corrcorr.png")
-        dx,dy = corr.find_translation(1)
-        
-        corr.show_image()
-        a = corr.show_translation(dx, dy)
-        tsx.append(a[0])
-        tsy.append(a[1])
-    
-        print(dx, dy)  
-        
-        dx = float(dx)
-        dy = float(dy)
-        angle = np.sqrt(dx*dx + dy*dy)
-        print(angle)  
-        print("---------Angle: ", i,"----------")
-    plt.show()
-    
-    plt.plot(tsx, tsy, 'ro')
-    plt.show()
+#    testfolder= "../../../fftfun/PolarFFT/"
+#    
+#    print("Polar t pic")    
+#    p = ft.get_polar_t()
+#    p.show_image()
+#    plt.show()
+#
+#    imft = ImgFFT(p)
+#    imft.ft() 
+#    
+#    tsx = []
+#    tsy = []
+#    arange = np.arange(0, 90 + 10, 10)
+#    for i in arange:
+#        print("---------Angle: ", i,"----------")
+#
+#        myrot = deepcopy(im)    
+#        myrot.rotate(i)    
+#        myrot.show_image()
+#        plt.show()
+#    
+#        ftrot = ImgFFT(myrot)
+#        ftrot.ft()
+# 
+#        prot = ftrot.get_polar_t()
+#        prot.show_image()
+#        plt.show()  
+#
+#        prot.save(testfolder + "prot.png")    
+#    
+#        # fft correlation between im and prot
+#        protft = ImgFFT(prot)
+#        protft.ft()
+#        
+#        
+#        corr = imft.correlate(ftrot)
+#        corr.save(testfolder + "corrcorr.png")
+#        dx,dy = corr.find_translation(1)
+#        
+#        corr.show_image()
+#        a = corr.show_translation(dx, dy)
+#        tsx.append(a[0])
+#        tsy.append(a[1])
+#    
+#        print(dx, dy)  
+#        
+#        dx = float(dx)
+#        dy = float(dy)
+#        angle = np.sqrt(dx*dx + dy*dy)
+#        print(angle)  
+#        print("---------Angle: ", i,"----------")
+#    plt.show()
+#    
+#    plt.plot(tsx, tsy, 'ro')
+#    plt.show()
 #    re = ft.resize_image(100, 100)
 #    re.show_image()
 #    plt.show()

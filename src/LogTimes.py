@@ -13,6 +13,8 @@ import time
 
 # Timing utils
 
+
+
 class TimingsTot:
     def __init__(self, path = None, title = "insert date time here", debug_mode = True):
         self.starttime = time.perf_counter()
@@ -47,7 +49,7 @@ class TimingsTot:
         self.lastcall = time.perf_counter()
         return s
     
-    def logtimestr(self, title):
+    def log(self, title):
         s = self.gettimestr()
         if self.logfilepath != None:
             with open(self.logfilepath, 'a') as f:
@@ -60,6 +62,7 @@ class TimingsTot:
     def __str__(self):
         s = 'Not available'
         return s    
+
 
 class Timings:
     def __init__(self):

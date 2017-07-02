@@ -247,6 +247,7 @@ class AvgFolder(object):
         self.avg = s / len(dataset)
     
     # I/O methods
+    
     def save_template(self):
         self.template.save(join(self.avgpath, "template.png"))
             
@@ -390,6 +391,18 @@ class ImageArray(BaseArray):
             if n[2] in ['.jpg', '.png']:
                 self.paths.append(join(n[0], n[1] + n[2]))
 
+    def get_path_to_img(self, i):
+         # check if there is an image already
+         path, name, ext = get_pathname(self.paths[i])
+         imgpath = join(path, name + ".png")
+         
+         if isfile(imgpath):
+             return imgpath
+         else:
+             img = self.get_image(i)
+             img.save(imgpath)
+             return imgpath
+
     def get_image(self, i):
         path = self.paths[i]
         image = MyImage(path)
@@ -414,6 +427,18 @@ class NpyImageArray(BaseArray):
         for n in names:
             if n[2] in ['.pickle']:
                 self.paths.append(join(n[0], n[1] + n[2]))
+    
+    def get_path_to_img(self, i):
+         # check if there is an image already
+         path, name, ext = get_pathname(self.paths[i])
+         imgpath = join(path, name + ".png")
+         
+         if isfile(imgpath):
+             return imgpath
+         else:
+             img = self.get_image(i)
+             img.save(imgpath)
+             return imgpath
 
     def get_image(self, i):
         with open(self.paths[i], 'rb') as f:
@@ -671,6 +696,12 @@ class AvgFolderMem(object):
         self.avg = s / dataset.n
     
     # I/O methods
+    def get_template_path(self):
+        return join(self.avgpath, "template.png")
+    
+    def get_avg_path(self):
+        return join(self.subfolders["results"], "avg.png")
+
     def save_template(self):
         self.template.save(join(self.avgpath, "template.png"))
             
@@ -678,7 +709,7 @@ class AvgFolderMem(object):
         self.template.read_from_file(filepathname)            
     
     def save_avg(self):
-        self.avg.save(join(self.subfolders["results"], "avg.png"))
+        self.avg.save(self.get_avg_path())
     
     def save_shifts(self):
         with open(join(self.subfolders["results"], "shifts_log.txt"), "w") as f:
@@ -881,84 +912,84 @@ if __name__ == "__main__":
 #            image.save(join(testdatasetpath, "pic_" + str(i) + ".png"))                                         
 #
     
-    # test for timings
-    memsave = True
-    
-    if memsave:
-        title = "MEMSAVE"
-    else:
-        title = "LOAD IN MEM"
-    
-
-
-    from LogTimes import TimingsTot
-    
-    mypath = "../../../silentcam/dataset36/"
-    
-    t = TimingsTot(mypath + "time_logfile.log", title)
-
-    print("------------------------------")
-    print("Loading dataset")
-    print("------------------------------")  
-
-    if memsave:
-        avg = AvgFolderMem(mypath)
-    else:
-        avg = AvgFolder(mypath)
-    avg.gather_pictures()
-    avg.c2gscale()
-    avg.squareit()
-    avg.binning(0)
-    avg.transpose()
-    avg.normalize()
-    
-    t.logtimestr("Dataset Loaded")
-
-    print("------------------------------")
-    print("Generating template")
-    print("------------------------------")  
-    
-#    custom_template = MyImage()
-#    custom_template.read_from_file(join(template_folder, "template.png"))
-#    custom_template.convert2grayscale()
-
-    avg.generate_template("UseFirstImage", (-1, 1, 0.1))
-    avg.save_template()
-    
-    avg.template.show_image()
-    plt.show()  
-    
-    avg.template.inspect()    
- 
-    t.logtimestr("Template Generated")
-  
-    
-    correlate = True
-    if correlate:
-        # aling dataset
-        print("------------------------------")
-        print("Alignment")
-        print("------------------------------")
+#    # test for timings
+#    memsave = True
+#    
+#    if memsave:
+#        title = "MEMSAVE"
+#    else:
+#        title = "LOAD IN MEM"
+#    
+#
+#
+#    from LogTimes import TimingsTot
+#    
+#    mypath = "../../../silentcam/dataset39/"
+#    
+#    t = TimingsTot(mypath + "time_logfile.log", title)
+#
+#    print("------------------------------")
+#    print("Loading dataset")
+#    print("------------------------------")  
+#
+#    if memsave:
+#        avg = AvgFolderMem(mypath)
+#    else:
+#        avg = AvgFolder(mypath)
+#    avg.gather_pictures()
+#    avg.c2gscale()
+#    avg.squareit()
+#    avg.binning(0)
+#    avg.transpose()
+#    avg.normalize()
+#    
+#    t.log("Dataset Loaded")
+#
+#    print("------------------------------")
+#    print("Generating template")
+#    print("------------------------------")  
+#    
+##    custom_template = MyImage()
+##    custom_template.read_from_file(join(template_folder, "template.png"))
+##    custom_template.convert2grayscale()
+#
+#    avg.generate_template("UseFirstImage", (-1, 1, 0.1))
+#    avg.save_template()
+#    
+#    avg.template.show_image()
+#    plt.show()  
+#    
+#    avg.template.inspect()    
+# 
+#    t.log("Template Generated")
+#  
+#    
+#    correlate = True
+#    if correlate:
+#        # aling dataset
+#        print("------------------------------")
+#        print("Alignment")
+#        print("------------------------------")
+#        
+#        avg.align_images(debug = True)
+#        avg.save_shifts()
+#
+#        t.log("Alignment completed")
+#    
+#        print("------------------------------")
+#        print("Average")
+#        print("------------------------------")          
+#        avg.average(debug = True)
+#        avg.save_avg()
+#        
+#        t.log("Average completed")
+#        
+#        avg.avg.show_image()
+#        plt.show() 
+#        avg.avg.inspect()
         
-        avg.align_images()
-        avg.save_shifts()
-
-        t.logtimestr("Alignment completed")
-    
-        print("------------------------------")
-        print("Average")
-        print("------------------------------")          
-        avg.average()
-        avg.save_avg()
         
-        t.logtimestr("Average completed")
-        
-        avg.avg.show_image()
-        plt.show() 
-        avg.avg.inspect()
-        
-        
-#    a = AnalyzeShifts("../../../silentcam/dataset34/avg/results/shifts_log.txt")
+#    a = AnalyzeShifts("../../../silentcam/dataset39/avg/results/shifts_log.txt")
 #    
 #    a.plot_xy()
 #    a.plot_angles()

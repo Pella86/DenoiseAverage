@@ -189,6 +189,7 @@ class AvgRGB_savememory(object):
     
     def save_alg_image(self, index, algimg):
         filename, ext = splitext(self.imgs_names[index])
+        algimg.limit(1.0)
         algimg.save(join(self.subfolders["aligned_rgb_images"], ("alg_" + filename + ".png" )))        
     
     def gather_pictures_names(self):
@@ -227,8 +228,10 @@ class AvgRGB_savememory(object):
             
         s = s / float(sizedataset)
         self.avg = MyRGBImg(color.lab2rgb(s))
+        
         self.avg.transpose()
         self.avg.rotate(90)
+
        
     def load_algs(self):
         with open(join(self.subfolders["results"], "shifts_log.txt")) as f:
@@ -251,12 +254,13 @@ class AvgRGB_savememory(object):
             
             # load picture to align
             algimage = self.get_image(i)
+
             
             algimage.squareit()
 
             rotalg = True
             if rotalg:
-                algimage.rotate(-self.algs[i][2])
+                algimage.rotate(self.algs[i][2])
             
             algimage.move(-self.algs[i][0], -self.algs[i][1])
             
@@ -289,7 +293,7 @@ class AvgRGB_savememory(object):
 
 if __name__ == "__main__":
     
-    pathtodataset = "../../../silentcam/dataset34/"
+    pathtodataset = "../../../silentcam/dataset37/"
     
 #    avg = AvgRGB(pathtodataset)
 #    avg.gather_pictures()
@@ -299,17 +303,17 @@ if __name__ == "__main__":
 #    avg.save_avg()
     from LogTimes import TimingsTot
     
-    t = TimingsTot(pathtodataset + "time_logfile.log")
+    t = TimingsTot(pathtodataset + "rgb_time_logfile.log")
     
     avg = AvgRGB_savememory(pathtodataset)
     avg.gather_pictures_names()
-    t.logtimestr("Loaded names")
+    t.log("Loaded names")
     avg.load_algs()
-    t.logtimestr("Loaded aligments")
+    t.log("Loaded aligments")
     avg.align_images(debug = True)
-    t.logtimestr("Aligned Images")
+    t.log("Aligned Images")
     avg.average(aligned = True, debug = True)
-    t.logtimestr("Averaged Images")
+    t.log("Averaged Images")
     avg.save_avg()
     
     import winsound
