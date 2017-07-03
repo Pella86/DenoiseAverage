@@ -12,6 +12,7 @@ from tkinter import (Tk, Frame, Text, Label, Canvas, PhotoImage, StringVar,
 # py imports
 from os import mkdir 
 from os.path import join, isdir, split, splitext
+from copy import deepcopy
 
 # matlibplot imports
 from scipy.misc import imsave
@@ -27,7 +28,7 @@ import numpy as np
 
 
 
-from matplotlib import pyplot as plt
+#from matplotlib import pyplot as plt
 
 
 def get_pathname(path):
@@ -268,6 +269,11 @@ class ImageCanvSeq(ImageCanv):
             self.show_image(self.imgseq.get_path_to_img(self.idx.get()))
             self.update_seq_count()
             
+    def update(self, i):
+        self.idx = deepcopy(i)
+        self.show_image(self.imgseq.get_path_to_img(self.idx.get()))
+        self.update_seq_count()
+            
 
         
 
@@ -297,31 +303,22 @@ class AvgMain:
         myavg.gather_pictures()
         
         self.image_index = ConnectIndex(0)
+        self.max_images = myavg.init_imgs.n
         
-        # give a frame to the initial images
-        self.imageframe = Frame(self.mframe)
-        self.imageframe.grid(row = 0, column = 1)
-                
-        myimg = ImageCanvSeq(self.imageframe, myavg.init_imgs, "Initial Images", (256, 256), myavg, self.constext)
-        myimg.frame.grid(row = 0, column = 0)
+        titles = ["Initial Images", "Processed Images", "Aligned Images", "Corr Images"]
+        positions = [(0,1), (0,3), (0,4), (1, 2)]
+        myimgseqs = [myavg.init_imgs, myavg.imgs, myavg.algimgs, myavg.corrs]
+        self.canvarr = []
         
-        # give a frame for the processing
-        self.proctextframe = Frame(self.mframe)
-        self.proctextframe.grid(row = 0, column = 2)
-        
-        # give a canvas for the processed images
-        self.procframe = Frame(self.mframe)
-        self.procframe.grid(row = 0, column = 3)
-                
-        myimg = ImageCanvSeq(self.procframe, myavg.imgs, "Processed Images", (256, 256), myavg, self.constext)
-        myimg.frame.grid(row = 0, column = 0)    
-
-        # give a canvas for the aligned images
-        self.algimgs = Frame(self.mframe)
-        self.algimgs.grid(row = 0, column = 4)
-                
-        myimg = ImageCanvSeq(self.algimgs, myavg.algimgs, "Aligned Images", (256, 256), myavg, self.constext)
-        myimg.frame.grid(row = 0, column = 0)  
+        for title, position, imgseq in zip(titles, positions, myimgseqs):
+            frame = Frame(self.mframe)
+            frame.grid(row = position[0], column = position[1])
+            
+            mycanv = ImageCanvSeq(frame, imgseq, title, (256,256), myavg, self.constext)
+            mycanv.frame.pack()
+            
+            self.canvarr.append(mycanv)
+            
         
         # give a canvas for the averaged image
         self.avgimg = Frame(self.mframe)
@@ -344,29 +341,35 @@ class AvgMain:
         pathtotemplate = myavg.get_template_path()
         myimg.show_image(pathtotemplate)      
         
-         # give a canvas for the correlation images
-        self.corrimgs = Frame(self.mframe)
-        self.corrimgs.grid(row = 1, column = 2)
-                
-        myimg = ImageCanvSeq(self.corrimgs, myavg.corrs, "CorrImages", (256, 256), myavg, self.constext)
-        myimg.frame.grid(row = 0, column = 0) 
+        bleft = Button(self.mframe, text = "< conn", command = self.prev_pic)
+        bleft.grid(row = 2, column = 1)
+
+        bright = Button(self.mframe, text = "conn >", command = self.next_pic)
+        bright.grid(row = 2, column = 3)      
+        
+        # to do
+        # - add the custom cross corr panel
+        # - add the shift angle panel
+        # - add the calculate option
+        # - add the process picture panel
 
     def prev_pic(self):
-        if self.image_index > 0:
-            self.image_index -= 1
-            self.show_image(self.imgseq.get_path_to_img(self.image_index.get()))
-            self.update_seq_count()
-            
-    
+        self.image_index -= 1
+        for canv in self.canvarr:
+            if self.image_index > 0:
+                
+                canv.update(self.image_index)
+
     def next_pic(self):
-        if self.image_index < (self.maximgs - 1):
-            self.image_index += 1
-            self.show_image(self.imgseq.get_path_to_img(self.image_index.get()))
-            self.update_seq_count()        
+        self.image_index += 1
+        for canv in self.canvarr:
+            if self.image_index < (self.max_images - 1):
+                canv.update(self.image_index)
+      
 
 if __name__ == "__main__":
     
-    path = "../../../silentcam/testdataset/"
+    path = "../../../silentcam/dataset36/"
     
     # initializate Tk root
     root = Tk()   

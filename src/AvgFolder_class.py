@@ -812,7 +812,7 @@ class AnalyzeShifts:
         fig = plt.figure()
         ax = fig.add_subplot(111)
         
-        # plot the histogram
+        # plot the lines
         ax.plot([np.min(myangles), np.min(myangles)], [0, ymax], 'r-', linewidth = 0.1)
         ax.plot([np.max(myangles), np.max(myangles)], [0, ymax], 'r-', linewidth = 0.1)
         
@@ -822,7 +822,7 @@ class AnalyzeShifts:
         ax.set_xlabel("Angle (degrees)", fontsize = 12)
         ax.set_ylabel("Number of rotations", fontsize = 12)
 
-        
+        # plot the histogram
         ax.bar(myangles, myfreq, width = 0.05)
         ax.axis((xmin, xmax, 0, ymax))
         plt.savefig(join(self.path, 'angles_plot.png'), dpi = 600)
@@ -924,7 +924,7 @@ if __name__ == "__main__":
 #
 #    from LogTimes import TimingsTot
 #    
-#    mypath = "../../../silentcam/dataset39/"
+#    mypath = "../../../silentcam/dataset24/"
 #    
 #    t = TimingsTot(mypath + "time_logfile.log", title)
 #
@@ -953,7 +953,7 @@ if __name__ == "__main__":
 ##    custom_template.read_from_file(join(template_folder, "template.png"))
 ##    custom_template.convert2grayscale()
 #
-#    avg.generate_template("UseFirstImage", (-1, 1, 0.1))
+#    avg.generate_template("UseFirstImage", (-10, 10, 1))
 #    avg.save_template()
 #    
 #    avg.template.show_image()
@@ -989,10 +989,10 @@ if __name__ == "__main__":
 #        avg.avg.inspect()
         
         
-#    a = AnalyzeShifts("../../../silentcam/dataset39/avg/results/shifts_log.txt")
-#    
-#    a.plot_xy()
-#    a.plot_angles()
+    a = AnalyzeShifts("../../../silentcam/dataset41/avg/results/shifts_log.txt")
+    
+    a.plot_xy()
+    a.plot_angles()
         
         
 #    mypath = "../../silentcam/dataset25/"

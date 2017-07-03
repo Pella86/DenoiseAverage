@@ -135,14 +135,28 @@ class MyImage(object):
         
         self.data = mpic
     
-    def squareit(self):
-        lx = self.data.shape[0]
-        ly = self.data.shape[1]
+    def squareit(self, mode = "center"):
         
-        if lx > ly:
-            self.data = self.data[0:ly,0:ly]
-        else:
-            self.data = self.data[0:lx,0:lx]
+        if mode == "center":
+            lx = self.data.shape[0]
+            ly = self.data.shape[1]
+            
+            if lx > ly:
+                ix = int(lx / 2 - ly / 2)
+                iy = int(lx / 2 + ly / 2)
+                self.data = self.data[ ix : iy , 0 : ly]
+            else:
+                ix = int(ly / 2 - lx / 2)
+                iy = int(ly / 2 + lx / 2)
+                self.data = self.data[0 : lx, ix : iy ]            
+        if mode == "left side":
+            lx = self.data.shape[0]
+            ly = self.data.shape[1]
+            
+            if lx > ly:
+                self.data = self.data[0:ly,0:ly]
+            else:
+                self.data = self.data[0:lx,0:lx]
     
     def correlate(self, image):
         corr = signal.correlate2d(image.data, self.data, boundary='symm', mode='same')
@@ -270,7 +284,7 @@ class Mask(MyImage):
     
     
 if __name__ == "__main__":
-    mypicname = "../../../Lenna.png"
+    mypicname = "../../../images.png"
     mypic = MyImage()
     mypic.read_from_file(mypicname)
     mypic.squareit()

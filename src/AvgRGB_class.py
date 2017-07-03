@@ -229,8 +229,8 @@ class AvgRGB_savememory(object):
         s = s / float(sizedataset)
         self.avg = MyRGBImg(color.lab2rgb(s))
         
-        self.avg.transpose()
-        self.avg.rotate(90)
+#        self.avg.transpose()
+#        self.avg.rotate(90)
 
        
     def load_algs(self):
@@ -254,15 +254,14 @@ class AvgRGB_savememory(object):
             
             # load picture to align
             algimage = self.get_image(i)
-
             
             algimage.squareit()
 
-            rotalg = True
-            if rotalg:
-                algimage.rotate(self.algs[i][2])
+            algimage.rotate(self.algs[i][2])
             
             algimage.move(-self.algs[i][0], -self.algs[i][1])
+            
+            algimage.rotate(-90)
             
             # save the image
             self.save_alg_image(i, algimage)
@@ -289,18 +288,108 @@ class AvgRGB_savememory(object):
             self.subfolders[folder] = join(self.avgpath, folder)
             if not isdir(self.subfolders[folder]):
                 mkdir(self.subfolders[folder])
+        for i, img in enumerate(self.imgs):          
+            img.squareit()
+            self.imgs.set_image(i,img)
+        lg.info("dataset squared")
+ 
+    def transpose(self):
+        for i, img in enumerate(self.imgs):
+            img.transpose()
+            self.imgs.set_image(i,img)
+        lg.info("dataset transposed")
+        
+    def normalize(self):
+        for i, img in enumerate(self.imgs):
+            img.normalize()
+            self.imgs.set_image(i,img)
+        lg.info("dataset normalized")
+    
+    def binning(self, n = 1):
+        for i, img in enumerate(self.imgs):
+            img.binning(n)
+            self.imgs.set_image(i,img)
+        lg.info("dataset binned {0} times".format(n))
     
 
+        
 if __name__ == "__main__":
     
-    pathtodataset = "../../../silentcam/dataset37/"
-    
-#    avg = AvgRGB(pathtodataset)
-#    avg.gather_pictures()
-#    avg.load_algs()
-#    avg.align_images()
-#    avg.average()
-#    avg.save_avg()
+#    from matplotlib import pyplot as plt
+#    
+#    sound = True
+#    
+#    testdatasetpath = "../../../silentcam/rgbtestdataset/"
+#    template_folder = join(testdatasetpath, "template_folder")
+#
+#    if not isdir(testdatasetpath):
+#        mkdir(testdatasetpath)  
+#    
+#    logpathdir = join(testdatasetpath, "tlog")
+#    if not isdir(logpathdir):
+#        mkdir(logpathdir)    
+#    
+#    # create a test dataset:
+#    mypicname = "../../../volpe-test_2.png"
+#    mypic = MyRGBImg()
+#    mypic.read_from_file(mypicname)
+#       
+#    if not isdir(template_folder):
+#        mkdir(template_folder)
+#        
+#    mypic.save(join(template_folder, "template.png"))
+#    
+#    mypic.show_image()
+#    plt.show()
+#
+#    print("------------------------------")
+#    print("creating dataset")
+#    print("------------------------------")   
+#
+#    np.random.seed(5)
+#    datasetangles = []
+#    datasetshifts = []
+#    
+#    datatrans = []
+#
+#    
+#    with open(join(logpathdir, "mytransformations.log"), 'w') as f:
+#        for i in range(10):
+#            image = deepcopy(mypic)
+#           
+#            anglefirst = False if np.random.randint(0,2) == 0 else True
+#            angle = np.random.randint(-10, 10)
+#            dx = np.random.randint(-50, 50)
+#            dy = np.random.randint(-50, 50)
+#            
+#            f.write("{0} {1} {2} {3}\n".format(anglefirst, angle, dx, dy))
+#            
+#            
+#            datatrans.append((anglefirst, angle, dx, dy))
+#            
+#            if anglefirst:
+#                datasetangles.append(angle)
+#                image.rotate(angle)
+#    
+#                datasetshifts.append((dx,dy))
+#                image.move(dx, dy)
+#            else:
+#                datasetshifts.append((dx,dy))
+#                image.move(dx, dy) 
+#    
+#                datasetangles.append(angle)
+#                image.rotate(angle)
+#            
+#            print(datatrans[i])
+#               
+#            image.show_image()
+#            plt.show()
+#            
+#            image.save(join(testdatasetpath, "pic_" + str(i) + ".png"))     
+#    
+
+    pathtodataset = "../../../silentcam/dataset41/"
+
     from LogTimes import TimingsTot
     
     t = TimingsTot(pathtodataset + "rgb_time_logfile.log")
