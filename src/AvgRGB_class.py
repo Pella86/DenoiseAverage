@@ -201,8 +201,77 @@ class AvgRGB_savememory(object):
             path, name, ext = get_pathname(filename)
             if ext in ['.png', '.jpg']:       
                 self.imgs_names.append(filename)
+    
+    def average(self, mode = "Mode",  aligned = True, debug = False, transition = True):
+        if mode == "Mean":
+            self.average_mean(aligned, debug, transition)
+        if mode == "Median":
+            self.average_median(aligned, debug, transition)
+        if mode == "Mode":
+            self.average_mode(aligned, debug, transition)
+    
+    def average_mode(self, aligned = True, debug = False, transition = True):
+        # the mode should be the most frequent pixel in an array
+        # let's construct a bin method for float number
+        # if myn > nmin and myn <= nmax: binn +=1
 
-    def average(self, aligned = True, debug = False, transition = True):
+        sizedataset = len(self.imgs_names)
+        if aligned:
+            get_img = lambda i: self.get_alg_image(i) #self.get_alg_image(0)
+        else:
+            get_img = lambda i: self.get_image(i) #self.get_image(0)
+            
+        dimsx = get_img(0).data.shape[0]
+        dimsy = get_img(0).data.shape[1]
+
+        depth = 128
+        darray = np.arange(depth)
+        # slice the operation into quadrants?
+        dimx2 = int(dimsx / 2)
+        dimy2 = int(dimsy / 2)
+        quadrant = [(0, dimx2, 0, dimy2) , (dimx2 + 1, dimsx, 0, dimy2),
+                    (0, dimx2, dimy2 + 1, dimsy), (dimx2 + 1, dimsx, dimy2, dimsy)]
+        
+        for q in quadrant:
+            stack = np.zeros(( int(dimsx / 2), int(dimsy / 2), 3, depth))
+            for i in range(sizedataset):
+                print("---", i, "----")
+                image = get_img(i)
+                for x in range(q[0], q[1]):
+                    for y in range(q[2], q[3]):
+                        for c in range(3):
+                            for d in range(len(darray) - 1):
+                                if image.data[x,y,c] < 0 or image.data[x,y,c] > 1:
+                                    raise ValueError("image not normalized")                                
+                                pv = image.data[x,y,c] * depth
+                                if pv >= darray[d] and pv < darray[d + 1]:
+                                 stack[x, y, c, d] += 1
+            # choose the number which has the highest frequency and assign it 
+            # to the picture
+            
+        
+        
+    
+    def average_median(self, aligned = True, debug = False, transition = True):
+        # construct the tower of pictures
+        
+        # memory error.
+        sizedataset = len(self.imgs_names)
+        if aligned:
+            get_img = lambda i: self.get_alg_image(i) #self.get_alg_image(0)
+        else:
+            get_img = lambda i: self.get_image(i) #self.get_image(0)
+            
+        dimsx = get_img(0).data.shape[0]
+        dimsy = get_img(0).data.shape[1]
+        
+        stack = np.zeros((dimsx, dimsy, 3, sizedataset))
+        for i in range(sizedataset):
+            pic = get_img(i)
+            stack[:, :, 3, i] = pic.data
+        print(len(stack))
+    
+    def average_mean(self, aligned = True, debug = False, transition = True):
         sizedataset = len(self.imgs_names)
         if aligned:
             picture = self.get_alg_image(0)
@@ -412,7 +481,7 @@ if __name__ == "__main__":
     avg.align_images(debug = True)
     t.log("Aligned Images")
     
-    avg.average(aligned = True, debug = True)
+    avg.average(mode = "Mean", aligned = True, debug = True)
     t.log("Averaged Images")
     
     avg.save_avg()
