@@ -294,40 +294,43 @@ class AvgMain:
         # add a beauty label
         l = Label(self.consoleframe, text = "Console:")
         l.grid(row = 0, column = 0)
+        
         # create text box as a console
         self.constext = ConsWidget(self.consoleframe)
         self.constext.textbox.grid(row = 1, column = 0)
         
         # use the averaging class to load the images from the folder
-        myavg = AvgFolderMem(self.mpath)
-        myavg.gather_pictures()
+        self.myavg = AvgFolderMem(self.mpath)
+        self.myavg.gather_pictures()
         
         self.image_index = ConnectIndex(0)
-        self.max_images = myavg.init_imgs.n
+        self.max_images = self.myavg.init_imgs.n
         
         titles = ["Initial Images", "Processed Images", "Aligned Images", "Corr Images"]
         positions = [(0,1), (0,3), (0,4), (1, 2)]
-        myimgseqs = [myavg.init_imgs, myavg.imgs, myavg.algimgs, myavg.corrs]
+        myimgseqs = [self.myavg.init_imgs, self.myavg.imgs, self.myavg.algimgs, self.myavg.corrs]
         self.canvarr = []
         
         for title, position, imgseq in zip(titles, positions, myimgseqs):
             frame = Frame(self.mframe)
             frame.grid(row = position[0], column = position[1])
             
-            mycanv = ImageCanvSeq(frame, imgseq, title, (256,256), myavg, self.constext)
+            mycanv = ImageCanvSeq(frame, imgseq, title, (256,256), self.myavg, self.constext)
             mycanv.frame.pack()
             
             self.canvarr.append(mycanv)
+            
+        # create a text box
             
         
         # give a canvas for the averaged image
         self.avgimg = Frame(self.mframe)
         self.avgimg.grid(row = 0, column = 5)
                 
-        myimg = ImageCanv(self.avgimg, "Average", (256, 256), myavg, self.constext)
+        myimg = ImageCanv(self.avgimg, "Average", (256, 256), self.myavg, self.constext)
         myimg.cframe.grid(row = 0, column = 0)  
         
-        pathtoavg = myavg.get_avg_path()
+        pathtoavg = self.myavg.get_avg_path()
         myimg.show_image(pathtoavg)  
 
        
@@ -335,17 +338,26 @@ class AvgMain:
         self.templateimg = Frame(self.mframe)
         self.templateimg.grid(row = 1, column = 1)
                 
-        myimg = ImageCanv(self.templateimg, "Template", (256, 256), myavg, self.constext)
+        myimg = ImageCanv(self.templateimg, "Template", (256, 256), self.myavg, self.constext)
         myimg.cframe.grid(row = 0, column = 0)  
         
-        pathtotemplate = myavg.get_template_path()
+        pathtotemplate = self.myavg.get_template_path()
         myimg.show_image(pathtotemplate)      
+        
+        # add the shift and angles
+        
+        # buttons to control images together
         
         bleft = Button(self.mframe, text = "< conn", command = self.prev_pic)
         bleft.grid(row = 2, column = 1)
 
         bright = Button(self.mframe, text = "conn >", command = self.next_pic)
-        bright.grid(row = 2, column = 3)      
+        bright.grid(row = 2, column = 3)  
+        
+        # create custom cross correlation
+        # create a button analyze correlation.
+        bcorr = Button(self.mframe, text = "correlate", command = self.correlate)
+        bcorr.grid(row = 2, column = 2)
         
         # to do
         # - add the custom cross corr panel
@@ -365,6 +377,20 @@ class AvgMain:
         for canv in self.canvarr:
             if self.image_index < (self.max_images - 1):
                 canv.update(self.image_index)
+    
+    def correlate(self):
+        # get the two images and pass them to Cross corr gui.
+        idx = self.image_index
+        
+        # get the processed image
+        procimg = self.imgs[i].get_path
+        
+        # template
+        template = self.myavg.get_path_to_template()
+        
+        # load the Cross Corr GUI
+        # create a widget...
+        
       
 
 if __name__ == "__main__":

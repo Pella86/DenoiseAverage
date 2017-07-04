@@ -136,7 +136,7 @@ class AvgRGB(object):
         if not isdir(self.avgpath):
             mkdir(self.avgpath)
         
-        subfolders = ["aligned_rgb_images", "results"]
+        subfolders = ["aligned_rgb_images", "results", "avg_transition"]
         for folder in subfolders:
             self.subfolders[folder] = join(self.avgpath, folder)
             if not isdir(self.subfolders[folder]):
@@ -202,7 +202,7 @@ class AvgRGB_savememory(object):
             if ext in ['.png', '.jpg']:       
                 self.imgs_names.append(filename)
 
-    def average(self, aligned = True, debug = False):
+    def average(self, aligned = True, debug = False, transition = True):
         sizedataset = len(self.imgs_names)
         if aligned:
             picture = self.get_alg_image(0)
@@ -222,9 +222,14 @@ class AvgRGB_savememory(object):
                 picture = self.get_image(i)
             # convert both to lab
             im = color.rgb2lab(picture.data)
-
             #perform operations
-            s += im 
+            s += im
+            
+            if transition:
+                tr = s / float(i + 1)
+                avg = MyRGBImg(color.lab2rgb(tr))
+                avg.save(join(self.subfolders["avg_transition"], "avg_tr_" + str(i) + ".png"))
+                
             
         s = s / float(sizedataset)
         self.avg = MyRGBImg(color.lab2rgb(s))
@@ -256,7 +261,9 @@ class AvgRGB_savememory(object):
             algimage = self.get_image(i)
             
             algimage.squareit()
-
+            
+            
+            
             algimage.rotate(self.algs[i][2])
             
             algimage.move(-self.algs[i][0], -self.algs[i][1])
@@ -283,14 +290,14 @@ class AvgRGB_savememory(object):
         if not isdir(self.avgpath):
             mkdir(self.avgpath)
         
-        subfolders = ["aligned_rgb_images", "results"]
+        subfolders = ["aligned_rgb_images", "results", "avg_transition"]
         for folder in subfolders:
             self.subfolders[folder] = join(self.avgpath, folder)
             if not isdir(self.subfolders[folder]):
                 mkdir(self.subfolders[folder])
-        for i, img in enumerate(self.imgs):          
-            img.squareit()
-            self.imgs.set_image(i,img)
+#        for i, img in enumerate(self.imgs):          
+#            img.squareit()
+#            self.imgs.set_image(i,img)
         lg.info("dataset squared")
  
     def transpose(self):
@@ -388,21 +395,26 @@ if __name__ == "__main__":
 #            image.save(join(testdatasetpath, "pic_" + str(i) + ".png"))     
 #    
 
-    pathtodataset = "../../../silentcam/dataset41/"
+    pathtodataset = "../../../silentcam/dataset40/"
 
     from LogTimes import TimingsTot
     
     t = TimingsTot(pathtodataset + "rgb_time_logfile.log")
     
     avg = AvgRGB_savememory(pathtodataset)
+    
     avg.gather_pictures_names()
     t.log("Loaded names")
+    
     avg.load_algs()
     t.log("Loaded aligments")
+    
     avg.align_images(debug = True)
     t.log("Aligned Images")
+    
     avg.average(aligned = True, debug = True)
     t.log("Averaged Images")
+    
     avg.save_avg()
     
     import winsound

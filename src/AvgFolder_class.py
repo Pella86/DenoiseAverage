@@ -473,6 +473,107 @@ class NpyFTArray(BaseArray):
         with open(self.paths[i], 'wb') as f:
             np.save(f, image.imgfft)
 
+class AngleNode:
+    
+    def __init__(self, angle, angles, inittemplate):
+        self.inittemplate = inittemplate
+        self.angle = angle
+        self.ccvalue = None
+        self.angles = angles
+        
+        if self.angle not in self.angles:
+            self.init_template()
+        
+        
+    def init_template(self):
+        print("creating angle: ", self.angle)
+        rot = deepcopy(self.inittemplate)
+        
+        rot.rotate(self.angle)
+        
+        rotft = ImgFFT(rot)
+        rotft.ft()  
+        self.template = rotft
+        
+        self.angles.append(self.angle)
+        
+    
+    def get_template(self):
+        return self.template
+        
+        
+
+class AnglesTree:
+    
+    def __init__(self, mina, maxa, precision, template):
+        self.template = template
+        self.angles = []
+        self.langle = AngleNode(mina, self.angles, self.template)
+        self.rangle = AngleNode(maxa, self.angles, self.template)
+        self.prec = precision * 2
+        self.angles_nodes = [self.langle, self.rangle]
+        
+        
+    def analyze_image(self, image):
+        print("------------ Analysis image ------------")    
+        
+        langle = self.langle
+        rangle = self.rangle
+        
+        langle.ccvalue = None
+        rangle.ccvalue = None
+        
+        imageft = ImgFFT(image.data)
+        imageft.ft()
+        
+        #aprec = langle.angle + self.prec - rangle.angle
+        
+
+        while langle.angle + self.prec < rangle.angle:
+            print("---------", langle.angle + self.prec, rangle.angle, "-----------")
+            # test the three angles
+            print("Analyzing:", langle.angle, rangle.angle)
+            
+            
+            hangle = (langle.angle + rangle.angle) / 2.
+            halfangle = None
+            print("halfangle", hangle)
+            for anglenode in self.angles_nodes:
+                if hangle == anglenode.angle:
+                    print("Halfangle already existing!")
+                    halfangle = anglenode
+            
+            if halfangle is None:
+                print("Creating halfangle")
+                halfangle = AngleNode((langle.angle + rangle.angle) / 2., self.angles, self.template)
+                self.angles_nodes.append(halfangle)
+            
+            if langle.ccvalue is None:
+                cc1 = langle.template.correlate(imageft)
+                b1, x, y = cc1.find_peak()
+                langle.ccvalue = b1
+            if rangle.ccvalue is None:
+                cc2 = halfangle.template.correlate(imageft)
+                b2, x, y = cc2.find_peak()
+                rangle.ccvalue = b2
+            
+            #cc3 = rangle.template.correlte(imageft)
+            
+            print("ccs:", langle.ccvalue, rangle.ccvalue) #, cc3)
+            
+            if b1 > b2:
+                rangle = halfangle
+            else:
+                langle = halfangle
+            
+            print("Angles: ", langle.angle, rangle.angle )
+            
+            #aprec = np.sqrt(langle.angle**2 + rangle.angle**2)
+        
+        return (langle.angle + rangle.angle) / 2.
+            
+
+
 class AvgFolderMem(object):
     
     # Initialization functions
@@ -523,8 +624,10 @@ class AvgFolderMem(object):
         
         self.avg = MyImage()
     
-
-
+    def refine_angles(self, min_angle, max_angle):
+        # builds a angles tree given the min max angle
+        pass
+        
     def makeavgdir(self):
         # create a folder average into the dataset path
         # avg
@@ -634,24 +737,28 @@ class AvgFolderMem(object):
     def align_images(self, debug = False):
         c = 0
         
+        anglestree = AnglesTree(-1, 1, 0.1, self.template)
+        
         for image in self.imgs:
+
+            angle = anglestree.analyze_image(image)
             
-            # generate the fourier transform of the image
-            imgft = ImgFFT(image)
-            imgft.ft()
-            
-            # calculate the rotations
-            smax = 0
-            idxmax = 0
-            for idx, temp in enumerate(self.templaterotsft):
-                corr = temp.correlate(imgft)
-                s, dx, dy = corr.find_peak(1)
-                
-                if s > smax:
-                    smax = s
-                    idxmax = idx
-            
-            angle = float(self.angles_list[idxmax])
+#            # generate the fourier transform of the image
+#            imgft = ImgFFT(image)
+#            imgft.ft()
+#            
+#            # calculate the rotations
+#            smax = 0
+#            idxmax = 0
+#            for idx, temp in enumerate(self.templaterotsft):
+#                corr = temp.correlate(imgft)
+#                s, dx, dy = corr.find_peak(1)
+#                
+#                if s > smax:
+#                    smax = s
+#                    idxmax = idx
+#            
+#            angle = float(self.angles_list[idxmax])
             
             print("angle found", angle)
             
@@ -910,123 +1017,90 @@ if __name__ == "__main__":
 #            plt.show()
 #            
 #            image.save(join(testdatasetpath, "pic_" + str(i) + ".png"))                                         
-#
+
     
-#    # test for timings
-#    memsave = True
-#    
-#    if memsave:
-#        title = "MEMSAVE"
-#    else:
-#        title = "LOAD IN MEM"
-#    
-#
-#
-#    from LogTimes import TimingsTot
-#    
-#    mypath = "../../../silentcam/dataset24/"
-#    
-#    t = TimingsTot(mypath + "time_logfile.log", title)
-#
-#    print("------------------------------")
-#    print("Loading dataset")
-#    print("------------------------------")  
-#
-#    if memsave:
-#        avg = AvgFolderMem(mypath)
-#    else:
-#        avg = AvgFolder(mypath)
-#    avg.gather_pictures()
-#    avg.c2gscale()
-#    avg.squareit()
-#    avg.binning(0)
-#    avg.transpose()
-#    avg.normalize()
-#    
-#    t.log("Dataset Loaded")
-#
-#    print("------------------------------")
-#    print("Generating template")
-#    print("------------------------------")  
-#    
-##    custom_template = MyImage()
-##    custom_template.read_from_file(join(template_folder, "template.png"))
-##    custom_template.convert2grayscale()
-#
-#    avg.generate_template("UseFirstImage", (-10, 10, 1))
-#    avg.save_template()
-#    
-#    avg.template.show_image()
-#    plt.show()  
-#    
-#    avg.template.inspect()    
-# 
-#    t.log("Template Generated")
-#  
-#    
-#    correlate = True
-#    if correlate:
-#        # aling dataset
-#        print("------------------------------")
-#        print("Alignment")
-#        print("------------------------------")
-#        
-#        avg.align_images(debug = True)
-#        avg.save_shifts()
-#
-#        t.log("Alignment completed")
-#    
-#        print("------------------------------")
-#        print("Average")
-#        print("------------------------------")          
-#        avg.average(debug = True)
-#        avg.save_avg()
-#        
-#        t.log("Average completed")
-#        
-#        avg.avg.show_image()
-#        plt.show() 
-#        avg.avg.inspect()
-        
-        
-    a = AnalyzeShifts("../../../silentcam/dataset41/avg/results/shifts_log.txt")
+    # test for timings
+    memsave = True
     
-    a.plot_xy()
-    a.plot_angles()
+    if memsave:
+        title = "MEMSAVE"
+    else:
+        title = "LOAD IN MEM"
+    
+
+
+    from LogTimes import TimingsTot
+    
+    mypath = "../../../silentcam/dataset40/"
+    
+    t = TimingsTot(mypath + "time_logfile.log", title)
+
+    print("------------------------------")
+    print("Loading dataset")
+    print("------------------------------")  
+
+    if memsave:
+        avg = AvgFolderMem(mypath)
+    else:
+        avg = AvgFolder(mypath)
+    avg.gather_pictures()
+    avg.c2gscale()
+    avg.squareit()
+    avg.binning(0)
+    avg.transpose()
+    avg.normalize()
+    
+    t.log("Dataset Loaded")
+
+    print("------------------------------")
+    print("Generating template")
+    print("------------------------------")  
+    
+#    custom_template = MyImage()
+#    custom_template.read_from_file(join(template_folder, "template.png"))
+#    custom_template.convert2grayscale()
+
+    avg.generate_template("UseFirstImage")
+    avg.save_template()
+    
+    avg.template.show_image()
+    plt.show()  
+    
+    avg.template.inspect()    
+ 
+    t.log("Template Generated")
+  
+    
+    correlate = True
+    if correlate:
+        # aling dataset
+        print("------------------------------")
+        print("Alignment")
+        print("------------------------------")
+        
+        avg.align_images(debug = True)
+        avg.save_shifts()
+
+        t.log("Alignment completed")
+    
+        print("------------------------------")
+        print("Average")
+        print("------------------------------")          
+        avg.average(debug = True)
+        avg.save_avg()
+        
+        t.log("Average completed")
+        
+        avg.avg.show_image()
+        plt.show() 
+        avg.avg.inspect()
         
         
-#    mypath = "../../silentcam/dataset25/"
-#    avg = AvgFolder(mypath)
-#    avg.gather_pictures()
-#    avg.c2gscale()
-#    avg.squareit()
-#    avg.binning(0)    
-#    avg.transpose()
-#    avg.normalize() 
+#    a = AnalyzeShifts("../../../silentcam/dataset41/avg/results/shifts_log.txt")
 #    
-#    avg.save_imgs()
-#
-#        
-#    avg.generate_template("UseFirstImage")
-#    avg.save_template()
-#    
-#    avg.template.show_image()
-#    plt.show()  
-#    
-#    avg.template.inspect()
-#    
-#    correlate = True
-#    if correlate:
-#        # aling dataset
-#        avg.align_images()
-#        avg.save_algimgs()
-#        avg.save_corrs()
-#        avg.save_shifts()
-#        
-#        avg.average()
-#        avg.save_avg()
-#        avg.avg.show_image()
-#        plt.show()
+#    a.plot_xy()
+#    a.plot_angles()
+
 
     if sound:
         import winsound
