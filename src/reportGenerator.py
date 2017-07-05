@@ -2,10 +2,8 @@
 """
 Created on Tue Jul  4 12:48:41 2017
 
-@author:
+@author:Miriam
 """
-import os
-import string
 import AvgFolder_class
 
 class reportGenerator:
@@ -102,4 +100,4 @@ class reportGenerator:
         return self.result_path
 
 
-reportGenerator = reportGenerator("testdataset", "C:/Users/Mimmi/Documents/GitHub/testdataset")
+reportGenerator = reportGenerator("testdataset", "")
