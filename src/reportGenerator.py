@@ -102,4 +102,4 @@ class reportGenerator:
         return self.result_path
 
 
-reportGenerator = reportGenerator("testdataset", "C:/Users/Mimmi/Documents/GitHub/testdataset")
+reportGenerator = reportGenerator("testdataset","")
