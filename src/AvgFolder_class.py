@@ -505,12 +505,12 @@ class AngleNode:
 
 class AnglesTree:
     
-    def __init__(self, mina, maxa, precision, template):
+    def __init__(self, angle_space, template):
         self.template = template
         self.angles = []
-        self.langle = AngleNode(mina, self.angles, self.template)
-        self.rangle = AngleNode(maxa, self.angles, self.template)
-        self.prec = precision * 2
+        self.langle = AngleNode(angle_space[0], self.angles, self.template)
+        self.rangle = AngleNode(angle_space[1], self.angles, self.template)
+        self.prec = angle_space[2] * 2
         self.angles_nodes = [self.langle, self.rangle]
         
         
@@ -520,8 +520,9 @@ class AnglesTree:
         langle = self.langle
         rangle = self.rangle
         
-        langle.ccvalue = None
-        rangle.ccvalue = None
+        # reset cc values
+        for angle in self.angles_nodes:
+            angle.ccvalue = None
         
         imageft = ImgFFT(image.data)
         imageft.ft()
@@ -552,16 +553,17 @@ class AnglesTree:
                 cc1 = langle.template.correlate(imageft)
                 b1, x, y = cc1.find_peak()
                 langle.ccvalue = b1
-            if rangle.ccvalue is None:
+                
+            if halfangle.ccvalue is None:
                 cc2 = halfangle.template.correlate(imageft)
                 b2, x, y = cc2.find_peak()
-                rangle.ccvalue = b2
+                halfangle.ccvalue = b2
             
             #cc3 = rangle.template.correlte(imageft)
             
-            print("ccs:", langle.ccvalue, rangle.ccvalue) #, cc3)
+            print("ccs:", langle.ccvalue, halfangle.ccvalue) #, cc3)
             
-            if b1 > b2:
+            if langle.ccvalue >= halfangle.ccvalue:
                 rangle = halfangle
             else:
                 langle = halfangle
@@ -601,12 +603,11 @@ class AvgFolderMem(object):
         self.init_imgs = ImageArray(self.path)
         self.imgs = NpyImageArray((self.subfolders["processed_images"], "proc_imgs.npy", len(self.init_imgs.paths)))
         
-        
-        
         # initialize variables
         self.template = MyImage()
         self.templateft = None
         self.angles_list = []
+        self.anglestree = None
         
         self.templaterotsft = None
         
@@ -704,62 +705,68 @@ class AvgFolderMem(object):
         else:
            raise TemplateTypeError(type(option))
         lg.info("template created: {0}".format(option))
-        
-        
-        if type(rot_precision) == tuple:
-            
-            print("Creating rotation references")
-            
-            # rot_precision format = (from, to, precision)
-            frm = rot_precision[0]
-            to = rot_precision[1]
-            prec = rot_precision[2]
-            self.angles_list = np.arange(frm, to, prec)
-            
-            print("From", frm, "to", to, "precision", prec)
-            print("Total:", len(self.angles_list), "angles")
-            self.templaterotsft = NpyFTArray((self.subfolders["template_rot"],
-                                              "template_rot_ft.npy", 
-                                              len(self.angles_list)
-                                              ))
-            for i, angle in enumerate(self.angles_list):
-                print("creating angle: ", angle)
-                rot = deepcopy(self.template)
-                rot.rotate(angle)
-                
-                rotft = ImgFFT(rot)
-                rotft.ft()
-                
-                self.templaterotsft.set_image(i, rotft)
-    
 
-    
-    def align_images(self, debug = False):
-        c = 0
+    def generate_rotref(self, angle_space):
+        print("Creating rotation references")
+            
+        # rot_precision format = (from, to, precision)
+        frm = angle_space[0]
+        to = angle_space[1]
+        prec = angle_space[2]
+        self.angles_list = np.arange(frm, to, prec)
         
-        anglestree = AnglesTree(-1, 1, 0.1, self.template)
+        print("From", frm, "to", to, "precision", prec)
+        print("Total:", len(self.angles_list), "angles")
+        self.templaterotsft = NpyFTArray((self.subfolders["template_rot"],
+                                          "template_rot_ft.npy", 
+                                          len(self.angles_list)
+                                          ))
+        
+        for i, angle in enumerate(self.angles_list):
+            print("creating angle: ", angle)
+            rot = deepcopy(self.template)
+            rot.rotate(angle)
+            
+            rotft = ImgFFT(rot)
+            rotft.ft()
+            
+            self.templaterotsft.set_image(i, rotft)  
+            
+    def align_images(self,angle_space_mode, angle_space, debug = False):
+        ''' The function takes a serie of images and aligns it against the
+        template, outputs the resulting images into the aligned_images folder
+        input:
+          angle_space_mode = ("fixed"|"tree")
+          angle_space = tuple (min angle, max angle, precision)
+        '''
+        c = 0
+        if angle_space_mode == "fixed":
+            self.generate_rotref(angle_space)
+        elif angle_space_mode == "tree":
+            self.anglestree = AnglesTree(angle_space, self.template)
         
         for image in self.imgs:
+            
+            if angle_space_mode == "fixed":
+                # generate the fourier transform of the image
+                imgft = ImgFFT(image)
+                imgft.ft()
+                
+                # calculate the rotations
+                smax = 0
+                idxmax = 0
+                for idx, temp in enumerate(self.templaterotsft):
+                    corr = temp.correlate(imgft)
+                    s, dx, dy = corr.find_peak(1)
+                    
+                    if s > smax:
+                        smax = s
+                        idxmax = idx
+                
+                angle = float(self.angles_list[idxmax])   
+            elif angle_space_mode == "tree":
+                angle = self.anglestree.analyze_image(image)
 
-            angle = anglestree.analyze_image(image)
-            
-#            # generate the fourier transform of the image
-#            imgft = ImgFFT(image)
-#            imgft.ft()
-#            
-#            # calculate the rotations
-#            smax = 0
-#            idxmax = 0
-#            for idx, temp in enumerate(self.templaterotsft):
-#                corr = temp.correlate(imgft)
-#                s, dx, dy = corr.find_peak(1)
-#                
-#                if s > smax:
-#                    smax = s
-#                    idxmax = idx
-#            
-#            angle = float(self.angles_list[idxmax])
-            
             print("angle found", angle)
             
             rotalgimage = deepcopy(image)

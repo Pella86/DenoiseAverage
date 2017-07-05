@@ -94,7 +94,15 @@ class MyImage(object):
         
         # show the image in greyscale
         plt.imshow(data, cmap = "Greys")    
-
+    
+    def get_size(self):
+        return (self.data.shape[0], self.data.shape[1])
+    
+    def get_sizex(self):
+        return self.get_size()[0]
+    
+    def get_sizey(self):
+        return self.get_size()[1]
     
     # ------ I/O functions ------
     
@@ -305,6 +313,9 @@ class Corr(MyImage):
         ''' converts the peak into the translation needed to overlap completely
         the pictures
         '''
+        if type(peak) == int:
+            peak = self.find_peak(peak)
+        
         #best = self.find_peak(msize)
         peakx = peak[1]
         peaky = peak[2]
