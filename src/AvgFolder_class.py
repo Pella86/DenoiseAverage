@@ -19,7 +19,6 @@ import numpy as np
 from os.path import isdir, isfile, join, splitext, split
 from os import listdir, mkdir
 from copy import deepcopy
-import logging as lg
 
 # My imports
 from MyImage_class import MyImage
@@ -66,8 +65,6 @@ class AvgFolder(object):
         except:
             print("WTF")
             
-        # create log file in the avg folder
-        lg.basicConfig(filename=join(self.avgpath,'example.log'),level=lg.INFO)
         
         # initialize variables
         self.imgs = []
@@ -95,7 +92,7 @@ class AvgFolder(object):
                 img = MyImage()
                 img.read_from_file(imagepath)
                 self.imgs.append(img)
-                lg.info("Image: {0} imported successfully".format(imagepath))
+
 
     def makeavgdir(self):
         # create a folder average into the dataset path
@@ -120,27 +117,27 @@ class AvgFolder(object):
     def c2gscale(self):
         for img in self.imgs:
             img.convert2grayscale()
-        lg.info("dataset converted to grayscale")
+
     
     def squareit(self):
         for img in self.imgs:
             img.squareit()
-        lg.info("dataset squared")
+
  
     def transpose(self):
         for img in self.imgs:
             img.transpose()
-        lg.info("dataset transposed")
+
         
     def normalize(self):
         for img in self.imgs:
             img.normalize()    
-        lg.info("dataset normalized")
+
     
     def binning(self, n = 1):
         for img in self.imgs:
             img.binning(n)
-        lg.info("dataset binned {0} times".format(n))
+
     
     # template handling
     def generate_template(self, option, rot_precision = None):
@@ -162,7 +159,7 @@ class AvgFolder(object):
             self.templateft.ft()
         else:
            raise TemplateTypeError(type(option))
-        lg.info("template created: {0}".format(option))
+
     
         if type(rot_precision) == tuple:
             
@@ -230,7 +227,7 @@ class AvgFolder(object):
             
             if debug:
                 print("Correlated image:", c)            
-            lg.info("correlated image n: " + str(c))
+
             
             c += 1
     
@@ -258,10 +255,10 @@ class AvgFolder(object):
         for i, img in enumerate(self.imgs):
             filename, ext = splitext(self.names[i])
             img.save(join(self.subfolders["processed_images"], "proc_" + filename + ".png"))
-        lg.info("processed dataset saved, images {0}".format(i))
+
     
     def laod_imgs(self):
-        lg.info("Loading processed images")
+
         p = self.subfolders["processed_images"]
         names = [f for f in listdir(p) if isfile(join(p, f))] 
         
@@ -270,17 +267,16 @@ class AvgFolder(object):
             img = MyImage()
             img.read_from_file(name)
             self.imgs.append(img)
-            lg.info("Image: {0} imported successfully".format(name))
+
             
     
     def save_algimgs(self):
         for i, algimg in enumerate(self.algimgs):
             filename, ext = splitext(self.names[i])
             algimg.save(join(self.subfolders["aligned_images"], ("alg_" + filename + ".png" )))
-        lg.info("aligned dataset saved, images {0}".format(i))
+
     
-    def laod_algimgs(self):
-        lg.info("Loading aligned images")  
+    def laod_algimgs(self):  
         p = self.subfolders["aligned_images"]
         names = [f for f in listdir(p) if isfile(join(p, f))] 
         
@@ -288,17 +284,15 @@ class AvgFolder(object):
         for name in names:
             img = MyImage()
             img.read_from_file(name)
-            self.imgs.append(img)
-            lg.info("Image: {0} imported successfully".format(name))    
+            self.imgs.append(img)   
     
     def save_corrs(self):
         for i, corr in enumerate(self.corrs):
             filename, ext = splitext(self.names[i])
             corr.save(join(self.subfolders["correlation_images"], ("corr_" + filename + ".png" )))
-        lg.info("correlations dataset saved, images {0}".format(i))
+
 
     def laod_corrs(self):
-        lg.info("Loading correlation images")  
         p = self.subfolders["correlation_images"]
         names = [f for f in listdir(p) if isfile(join(p, f))] 
         
@@ -307,7 +301,7 @@ class AvgFolder(object):
             img = MyImage()
             img.read_from_file(name)
             self.imgs.append(img)
-            lg.info("Image: {0} imported successfully".format(name))    
+  
     
     def save_avg(self):
         self.avg.save(join(self.subfolders["results"], "avg.png"))
@@ -316,7 +310,7 @@ class AvgFolder(object):
         with open(join(self.subfolders["results"], "shifts_log.txt"), "w") as f:
             for shift in self.shifts:
                 f.write("{0[0]:d} | {0[1]:d}\n".format(shift))
-        lg.info("Shifts saved")
+
 
     def load_shifts(self):
         with open(join(self.subfolders["results"], "shifts_log.txt")) as f:
@@ -510,7 +504,7 @@ class AnglesTree:
         self.angles = []
         self.langle = AngleNode(angle_space[0], self.angles, self.template)
         self.rangle = AngleNode(angle_space[1], self.angles, self.template)
-        self.prec = angle_space[2] * 2
+        self.prec = angle_space[2]
         self.angles_nodes = [self.langle, self.rangle]
         
         
@@ -596,8 +590,7 @@ class AvgFolderMem(object):
         except:
             print("WTF")
             
-        # create log file in the avg folder
-        lg.basicConfig(filename=join(self.avgpath,'example.log'),level=lg.INFO)
+
         
         # pictures
         self.init_imgs = ImageArray(self.path)
@@ -658,31 +651,28 @@ class AvgFolderMem(object):
         for i, img in enumerate(self.imgs):
             img.convert2grayscale()
             self.imgs.set_image(i,img)
-        lg.info("dataset converted to grayscale")
+
     
     def squareit(self):
         for i, img in enumerate(self.imgs):          
             img.squareit()
             self.imgs.set_image(i,img)
-        lg.info("dataset squared")
+
  
     def transpose(self):
         for i, img in enumerate(self.imgs):
             img.transpose()
             self.imgs.set_image(i,img)
-        lg.info("dataset transposed")
         
     def normalize(self):
         for i, img in enumerate(self.imgs):
             img.normalize()
             self.imgs.set_image(i,img)
-        lg.info("dataset normalized")
     
     def binning(self, n = 1):
         for i, img in enumerate(self.imgs):
             img.binning(n)
             self.imgs.set_image(i,img)
-        lg.info("dataset binned {0} times".format(n))
     
     # template handling
     def generate_template(self, option, rot_precision = None):
@@ -704,7 +694,6 @@ class AvgFolderMem(object):
             self.templateft.ft()
         else:
            raise TemplateTypeError(type(option))
-        lg.info("template created: {0}".format(option))
 
     def generate_rotref(self, angle_space):
         print("Creating rotation references")
@@ -791,7 +780,6 @@ class AvgFolderMem(object):
             if debug:
                 print("Correlated image:", c)    
                 
-            lg.info("correlated image n: " + str(c))
             
             c += 1
     
@@ -829,7 +817,6 @@ class AvgFolderMem(object):
         with open(join(self.subfolders["results"], "shifts_log.txt"), "w") as f:
             for shift in self.shifts:
                 f.write("{0[0]:d} | {0[1]:d} | {0[2]:.3f}\n".format(shift))
-        lg.info("Shifts saved")
 
     def load_shifts(self):
         with open(join(self.subfolders["results"], "shifts_log.txt")) as f:

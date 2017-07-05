@@ -11,6 +11,7 @@ Created on Tue Jun 27 07:06:41 2017
 
 import time
 import datetime
+from os.path import isfile
 
 # Timing utils
 
@@ -23,6 +24,11 @@ class Logger:
         self.starttime = time.perf_counter()
         self.nowtime = time.perf_counter()
         self.lastcall = time.perf_counter() 
+        
+        # create file?
+#        if not isfile(self.path_file):
+#            with open(self.path_file, 'w') as f:
+#                f.write("-init log file-")
         
         if title is not None:
             today = datetime.datetime.now()   
