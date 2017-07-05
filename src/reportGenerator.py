@@ -25,7 +25,7 @@ class reportGenerator:
         #body of report
         #self.out_file.write("<p>DATASET #" + self.index +"</p>\n")
         self.out_file.write("<p>Dataset title</p>\n")
-        self.out_file.write("<p>" + title + "</p>\n")
+        self.out_file.write("<p>" + self.title + "</p>\n")
 
         #initial images
         self.out_file.write("<div class =\"dataset-img \">\n")
