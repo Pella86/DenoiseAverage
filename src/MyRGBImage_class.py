@@ -21,12 +21,29 @@ from copy import deepcopy
 from MyImage_class import MyImage
 
 class MyRGBImg(object):
-    
-    # initialization methods
-    def __init__(self, data = np.zeros((5,5,3)), normalize = True):
-        self.data = data
-        if normalize:
-            self.limit(1)
+
+    def __init__(self, data = np.zeros((5,5))):  
+        ''' The image can be initiated with any numpy array, default is a 5x5 
+        zeroed matrix. The image can be intiated by tuple indicating its size
+        (mxn). The image can be initiated by a path to an image.
+        The data is stored in the self data folder.
+        Usage:
+            img = MyRGBImg()
+            img = MyRGBImg(np.zeros((512, 512)))
+            img = MyRGBImg((512, 512))
+            img = MyRGBImg(path/to/picture.png)
+        '''
+        if type(data) == np.ndarray:
+            self.data = data
+        elif type(data) == tuple:
+            if len(data) == 2:
+                self.data = np.zeros(data)
+        elif type(data) == str:
+            # shall i check for path being an image?
+            self.read_from_file(data)
+        else:
+            raise ValueError("data type not supported")    
+
     
     # I/O methods
     def read_from_file(self, filepathname, normalize = True):
@@ -158,6 +175,17 @@ class MyRGBImg(object):
             ch = self.get_channel(c)
             ch.transpose()
             self.set_channel(ch, c)
+    
+    def binning(self, n):
+        resdimx = int(self.data.shape[0] / 2 ** n)
+        resdimy = int(self.data.shape[1] / 2 ** n)
+        resimage = MyRGBImg(np.zeros((resdimx, resdimy, 3)))
+        for color in range(3):
+            img = self.get_channel(color)
+            img.binning(n)
+            resimage.set_channel(img, color)
+        self.data = resimage.data
+        self.limit(1)
    
     
 if __name__ == "__main__":
@@ -171,6 +199,8 @@ if __name__ == "__main__":
     myimg = MyRGBImg()
     myimg.read_from_file(path)
     myimg.squareit()
+    
+    myimg.binning(2)
     
     myimg.show_image()
     plt.show()

@@ -173,7 +173,8 @@ class MyImage(object):
                     b = self.data[x*2 + 1][y*2]
                     c = self.data[x*2]    [y*2 + 1]
                     d = self.data[x*2 + 1][y*2 + 1]
-                    rimg[x][y] =  (a + b + c + d) / 4.0
+                    rimg[x,y] =  (a + b + c + d) / 4.0
+                    
             
             self.data = rimg
 
@@ -415,14 +416,16 @@ if __name__ == "__main__":
     mypic.read_from_file(mypicname)
     mypic.squareit()
     mypic.convert2grayscale()
-    mypic.binning(0)
+    mypic.binning(1)
+    
     mypic.normalize()
     
     mypic.show_image()
     plt.show()
     
     movpic = deepcopy(mypic)
-    movpic.move(100, 0)
+    movpic.move(40, 0)
+    movpic.normalize()
     
     movpic.show_image()
     plt.show()
