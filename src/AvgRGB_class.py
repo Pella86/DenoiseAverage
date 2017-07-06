@@ -301,8 +301,9 @@ class AvgRGBMemSave(object):
         s = s / float(sizedataset)
         self.avg = MyRGBImg(color.lab2rgb(s))
         
-#        self.avg.transpose()
-#        self.avg.rotate(90)
+        if self.avg.data.shape[0] == self.avg.data.shape[1]:
+            self.avg.rotate(90)
+            self.avg.flip_V()
 
        
     def load_algs(self):
@@ -327,15 +328,16 @@ class AvgRGBMemSave(object):
             # load picture to align
             algimage = self.get_image(i)
             
-            #algimage.squareit()
-            #algimage.transpose()
-            algimage.rotate(90)
-            
-            algimage.rotate(-self.algs[i][2])
-            
-            
-            
-            #algimage.move(-self.algs[i][1], -self.algs[i][0])
+            if algimage.data.shape[0] == algimage.data.shape[1]:
+                algimage.rotate(90)
+                algimage.flip_V()            
+                algimage.rotate(self.algs[i][2])
+                algimage.move(-self.algs[i][0], -self.algs[i][1])
+            else:
+                # still doesnt work...
+                algimage.squareit()
+                algimage.rotate(self.algs[i][2])
+                algimage.move(-self.algs[i][0], -self.algs[i][1])                
 
             # save the image
             self.save_alg_image(i, algimage)

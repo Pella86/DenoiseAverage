@@ -882,7 +882,7 @@ class AnalyzeShifts:
         ax.set_title("XY movements during acquisition", fontsize = 15, fontweight = "bold")
         ax.set_xlabel("Horizontal shifts (pixels)", fontsize = 12)
         ax.set_ylabel("Vertical shifts (pixels)", fontsize = 12)
-        plt.savefig(join(self.path, 'xy_plot.png'), dpi = 600)
+        plt.savefig(join(self.path, 'xy_plot.png'), dpi = 300)
         plt.show()
         
     def plot_angles(self):
@@ -926,7 +926,7 @@ class AnalyzeShifts:
         # plot the histogram
         ax.bar(myangles, myfreq, width = 0.05)
         ax.axis((xmin, xmax, 0, ymax))
-        plt.savefig(join(self.path, 'angles_plot.png'), dpi = 600)
+        plt.savefig(join(self.path, 'angles_plot.png'), dpi = 300)
         plt.show()
         
 

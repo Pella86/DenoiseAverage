@@ -279,6 +279,26 @@ class MyImage(object):
                     
         self.data = dest.data
 
+    def flip_H(self):
+        sizex = self.data.shape[0] - 1
+        sizey = self.data.shape[1] - 1
+        for x in range(int(sizex / 2)):
+            for y in range(sizey):
+                tmp = self.data[x][y]
+                
+                self.data[x][y] = self.data[sizex - x][y]
+                self.data[sizex - x][y] = tmp
+
+    def flip_V(self):
+        sizex = self.data.shape[0] - 1
+        sizey = self.data.shape[1] - 1
+        for x in range(int(sizex)):
+            for y in range(int(sizey / 2)):
+                tmp = self.data[x][y]
+                
+                self.data[x][y] = self.data[x][sizey - y]
+                self.data[x][sizey - y] = tmp
+
 #==============================================================================
 # # Cross correlation image Handling class
 #==============================================================================
@@ -411,14 +431,18 @@ class Mask(MyImage):
     
     
 if __name__ == "__main__":
-    mypicname = "../../../images.png"
+    mypicname = "../../../Lenna.png"
     mypic = MyImage()
     mypic.read_from_file(mypicname)
     mypic.squareit()
     mypic.convert2grayscale()
-    mypic.binning(1)
-    
+    mypic.binning(0)
     mypic.normalize()
+
+    mypic.show_image()
+    plt.show()
+    
+    mypic.flip_V()
     
     mypic.show_image()
     plt.show()

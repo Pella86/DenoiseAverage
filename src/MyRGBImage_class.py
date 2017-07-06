@@ -186,7 +186,18 @@ class MyRGBImg(object):
             resimage.set_channel(img, color)
         self.data = resimage.data
         self.limit(1)
-   
+ 
+    def flip_V(self):
+        for c in range(3):
+            ch = self.get_channel(c)
+            ch.flip_V()
+            self.set_channel(ch, c)
+
+    def flip_H(self):
+        for c in range(3):
+            ch = self.get_channel(c)
+            ch.flip_H()
+            self.set_channel(ch, c)
     
 if __name__ == "__main__":
     # load a sample rgb picture
@@ -205,6 +216,10 @@ if __name__ == "__main__":
     myimg.show_image()
     plt.show()
     
+    myimg.flip_V()
+    
+    myimg.show_image()
+    plt.show()
     
     myimg.inspect('r')
     

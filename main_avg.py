@@ -25,19 +25,19 @@ from copy import deepcopy
 
 # myimports
 from LogTimes import Logger
-from AvgFolder_class import AvgFolderMem, AvgFolder
+from AvgFolder_class import AvgFolderMem, AvgFolder, AnalyzeShifts
 from MyImage_class import MyImage
 from MyRGBImage_class import MyRGBImg
 from AvgRGB_class import AvgRGBMemSave, AvgRGB
 
 
 
-def run_create_test_dataset():
+def run_create_test_dataset(folder):
     debug_mode = True
     
     # set parameters    
-    testdatasetpath = "../../silentcam/testdataset/"
-    mypicname = "../../Lenna.png"    
+    testdatasetpath = folder
+    mypicname = "./data/Lenna.png"    
     
     n_pictures = 25
     min_a = -10
@@ -123,12 +123,12 @@ def run_create_test_dataset():
             
             image.save(join(testdatasetpath, "pic_" + str(i) + ".png"))             
 
-def run_average_gray():
+def run_average_gray(folder):
     # options  
     debug_mode = True
     
     # chose path to image sequence folder
-    datasetpath = "../../silentcam/dataset43/"    
+    datasetpath = folder   
     
     memsave = True # True | False
     
@@ -139,7 +139,7 @@ def run_average_gray():
                  ("normalize",)]
     
     custom_template = False # True | False
-    template_image_path = "../../silentcam/testdataset/template_folder/template.png"  # path to image
+    template_image_path = folder + "template_folder/template.png"  # path to image
     
     auto_template_type = "UseFirstImage" # "Use First Image" | "Average"
     save_template = True # True | False
@@ -246,13 +246,13 @@ def run_average_gray():
     mylog.log("End procedure", True)
     
 
-def run_create_rgb_dataset():
+def run_create_rgb_dataset(folder):
 
     debug_mode = True
     
     # set parameters    
-    testdatasetpath = "../../silentcam/rgbtestdataset/"
-    mypicname = "../../Lenna.png"    
+    testdatasetpath = folder
+    mypicname = "./data/volpe-2.png"    
     
     n_pictures = 25
     min_a = -10
@@ -334,10 +334,17 @@ def run_create_rgb_dataset():
             
             image.save(join(testdatasetpath, "pic_" + str(i) + ".png"))
 
-def run_average_rgb():
+def run_produce_graphs(folder):
+    a = AnalyzeShifts(folder + "avg/results/shifts_log.txt")
+    
+    a.plot_xy()
+    a.plot_angles()    
+    
+
+def run_average_rgb(folder):
     debug_mode = True
     
-    datasetpath = "../../silentcam/rgbtestdataset/"
+    datasetpath = folder
     
     memsave = True # True | False
     
@@ -386,23 +393,28 @@ def run_average_rgb():
 if __name__ == "__main__":
     print("START AVERAGING SCRIPT")
     
+    folder = "../../silentcam/rgbtestdataset/"
+    
     create_dataset = False
     create_rgb_dataset = False
-    avgerage_gray = True
+    avgerage_gray = False
     average_rgb = False
+    produce_graphs = True
 
     if create_dataset:
-        run_create_test_dataset()
+        run_create_test_dataset(folder)
     
     if create_rgb_dataset:
-        run_create_rgb_dataset()
+        run_create_rgb_dataset(folder)
    
     if avgerage_gray:
-        run_average_gray()
+        run_average_gray(folder)
     
     if average_rgb:
-        run_average_rgb()
-    
+        run_average_rgb(folder)
+
+    if produce_graphs:
+        run_produce_graphs(folder)
 
     
     print("SCRIPT FINISH!")
