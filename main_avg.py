@@ -128,7 +128,7 @@ def run_average_gray():
     debug_mode = True
     
     # chose path to image sequence folder
-    datasetpath = "../../silentcam/rgbtestdataset/"    
+    datasetpath = "../../silentcam/dataset43/"    
     
     memsave = True # True | False
     
@@ -138,7 +138,7 @@ def run_average_gray():
                  ("transpose",),
                  ("normalize",)]
     
-    custom_template = True # True | False
+    custom_template = False # True | False
     template_image_path = "../../silentcam/testdataset/template_folder/template.png"  # path to image
     
     auto_template_type = "UseFirstImage" # "Use First Image" | "Average"
@@ -388,7 +388,7 @@ if __name__ == "__main__":
     
     create_dataset = False
     create_rgb_dataset = False
-    avgerage_gray = False
+    avgerage_gray = True
     average_rgb = False
 
     if create_dataset:
