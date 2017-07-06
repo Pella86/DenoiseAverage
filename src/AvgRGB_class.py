@@ -143,7 +143,7 @@ class AvgRGB(object):
                 mkdir(self.subfolders[folder])    
 
 
-class AvgRGB_savememory(object):
+class AvgRGBMemSave(object):
     
     # initialize method
     def __init__(self, path):
@@ -160,10 +160,6 @@ class AvgRGB_savememory(object):
             print("Folder not found")
         except:
             print("WTF")        
-
-        # create log file in the avg folder
-        lg.basicConfig(filename=join(self.avgpath,'rgb_average_savemem.log'),level=lg.INFO)
-        
         
         # instead of loading all the pictures in one array
         # create a path array that reads the pictures at will
@@ -189,7 +185,9 @@ class AvgRGB_savememory(object):
     
     def save_alg_image(self, index, algimg):
         filename, ext = splitext(self.imgs_names[index])
-        algimg.limit(1.0)
+        # do I have to normalize?
+        if not np.all(algimg.data <= 1) or not np.all(algimg.data >= 0):
+            algimg.limit(1.0)
         algimg.save(join(self.subfolders["aligned_rgb_images"], ("alg_" + filename + ".png" )))        
     
     def gather_pictures_names(self):
@@ -303,8 +301,9 @@ class AvgRGB_savememory(object):
         s = s / float(sizedataset)
         self.avg = MyRGBImg(color.lab2rgb(s))
         
-#        self.avg.transpose()
-#        self.avg.rotate(90)
+        if self.avg.data.shape[0] == self.avg.data.shape[1]:
+            self.avg.rotate(90)
+            self.avg.flip_V()
 
        
     def load_algs(self):
@@ -317,7 +316,7 @@ class AvgRGB_savememory(object):
             sdata = [d.strip() for d in sdata]
             data = [int(sdata[0]), int(sdata[1]), float(sdata[2])]
             self.algs.append(data)
-        lg.info("Alignments imported successfully")
+
         
     def align_images(self, debug = False):
         self.algimgs = []
@@ -329,20 +328,20 @@ class AvgRGB_savememory(object):
             # load picture to align
             algimage = self.get_image(i)
             
-            algimage.squareit()
-            
-            
-            
-            algimage.rotate(self.algs[i][2])
-            
-            algimage.move(-self.algs[i][0], -self.algs[i][1])
-            
-            algimage.rotate(-90)
-            
+            if algimage.data.shape[0] == algimage.data.shape[1]:
+                algimage.rotate(90)
+                algimage.flip_V()            
+                algimage.rotate(self.algs[i][2])
+                algimage.move(-self.algs[i][0], -self.algs[i][1])
+            else:
+                # still doesnt work...
+                algimage.squareit()
+                algimage.rotate(self.algs[i][2])
+                algimage.move(-self.algs[i][0], -self.algs[i][1])                
+
             # save the image
             self.save_alg_image(i, algimage)
-            
-        lg.info("Images aligned successfully")
+
 
     def save_avg(self, name = "avg_rgb.png"):
         self.avg.save(join(self.subfolders["results"], name))
@@ -367,26 +366,22 @@ class AvgRGB_savememory(object):
 #        for i, img in enumerate(self.imgs):          
 #            img.squareit()
 #            self.imgs.set_image(i,img)
-        lg.info("dataset squared")
+
  
     def transpose(self):
         for i, img in enumerate(self.imgs):
             img.transpose()
             self.imgs.set_image(i,img)
-        lg.info("dataset transposed")
-        
+
     def normalize(self):
         for i, img in enumerate(self.imgs):
             img.normalize()
             self.imgs.set_image(i,img)
-        lg.info("dataset normalized")
     
     def binning(self, n = 1):
         for i, img in enumerate(self.imgs):
             img.binning(n)
             self.imgs.set_image(i,img)
-        lg.info("dataset binned {0} times".format(n))
-    
 
         
 if __name__ == "__main__":
