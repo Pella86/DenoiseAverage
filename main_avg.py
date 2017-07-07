@@ -148,7 +148,7 @@ def run_average_gray(folder):
     
     align_images = True # True | False
     align_mode = "fixed" # "fixed | tree" // fixed still fastest option
-    align_space = (-10, 10, 1) # (min angle, max angle, precision)
+    align_space = (-1, 1, 0.1) # (min angle, max angle, precision)
     
     # logger
     mylog = Logger("Averaging Gray", datasetpath + "main_logfile.txt", debug_mode = debug_mode)
@@ -348,6 +348,8 @@ def run_average_rgb(folder):
     memsave = True # True | False
     
     mean_mode = "Mean"  # Mean | Median | Mode    
+    
+    do_alignment = True # True | False
 
     
     mylog = Logger("Average RGB dataset", datasetpath + "main_logfile.txt", debug_mode = debug_mode)    
@@ -356,6 +358,7 @@ def run_average_rgb(folder):
     mylog.log(datasetpath)
     mylog.log("Averaging type: rgb")
     mylog.log("Memory saving mode: " + str(memsave))
+    mylog.log("Alignment: ".join("ON" if do_alignment == True else "OFF"))
     
     if memsave:
         avg = AvgRGBMemSave(datasetpath)
@@ -378,9 +381,10 @@ def run_average_rgb(folder):
     mylog.log("Loaded aligments: " + str(len(avg.algs)))
  
     mylog.log("--- Start preporcessing ---", True) 
-     
-    avg.align_images(debug = debug_mode)
-    mylog.log("Aligned Images", True)
+    
+    if do_alignment:
+        avg.align_images(debug = debug_mode)
+        mylog.log("Aligned Images", True)
     
     avg.average(mode = mean_mode, aligned = True, debug = debug_mode)
     mylog.log("Averaged Images", True)
@@ -392,10 +396,13 @@ def run_average_rgb(folder):
 if __name__ == "__main__":
     print("START AVERAGING SCRIPT")
     
-    folder = "../../silentcam/rgbtestdataset/"
+    folder = "../../silentcam/dataset47/"
     
+    # create tests
     create_dataset = False
-    create_rgb_dataset = True
+    create_rgb_dataset = False
+    
+    # average functions
     avgerage_gray = True
     average_rgb = True
     produce_graphs = True

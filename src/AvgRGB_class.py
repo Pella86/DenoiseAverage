@@ -229,23 +229,68 @@ class AvgRGBMemSave(object):
         dimy2 = int(dimsy / 2)
         quadrant = [(0, dimx2, 0, dimy2) , (dimx2 + 1, dimsx, 0, dimy2),
                     (0, dimx2, dimy2 + 1, dimsy), (dimx2 + 1, dimsx, dimy2, dimsy)]
+        quadrant = [quadrant[0]]
+        
+        
         
         for q in quadrant:
-            stack = np.zeros(( int(dimsx / 2), int(dimsy / 2), 3, depth))
+            #stack = np.zeros(( int(dimsx / 2), int(dimsy / 2), 3, depth))
+            stack = []
+            for x in range(q[0], q[1]):
+                for y in range(q[2], q[3]):
+                    for c in range(3):     
+                        stack.append({})
+            
             for i in range(sizedataset):
                 print("---", i, "----")
                 image = get_img(i)
                 for x in range(q[0], q[1]):
                     for y in range(q[2], q[3]):
                         for c in range(3):
-                            for d in range(len(darray) - 1):
-                                if image.data[x,y,c] < 0 or image.data[x,y,c] > 1:
-                                    raise ValueError("image not normalized")                                
-                                pv = image.data[x,y,c] * depth
-                                if pv >= darray[d] and pv < darray[d + 1]:
-                                 stack[x, y, c, d] += 1
+#                            for d in range(len(darray) - 1):
+#                                if image.data[x,y,c] < 0 or image.data[x,y,c] > 1:
+#                                    raise ValueError("image not normalized")                                
+#                                pv = image.data[x,y,c] * depth
+#                                if pv >= darray[d] and pv < darray[d + 1]:
+                                 #stack[x, y, c, d] += 1
+                            if image.data[x,y,c] < 0 or image.data[x,y,c] > 1:
+                                raise ValueError("image not normalized")                                
+                            pv = image.data[x,y,c] * depth
+                            emptydict = stack[x + y + c]
+                            try:
+                                emptydict[int(pv)] += 1
+                            except KeyError:
+                                emptydict[int(pv)] = 1 
+                            stack[x + y*dimy2 + c] = emptydict
+                
+                            
             # choose the number which has the highest frequency and assign it 
             # to the picture
+            quadrantimg = MyRGBImg((dimx2, dimy2, 3))
+            for x in range(q[0], q[1]):
+                for y in range(q[2], q[3]):
+                    for c in range(3):      
+                        freq_dict = stack[x + y*dimy2 + c]
+                        print(x, y, c, len(freq_dict))
+                        keys = freq_dict.keys()
+                        values = freq_dict.values()
+                        mv = max(values)
+                        vdict = dict(zip(values, keys))
+                        px_int = vdict[mv] / float(depth)
+                        quadrantimg.data[x, y, c] = px_int
+#                        max_value = 0
+#                        px_int = 0
+#                        for key, value in freq_dict.items():
+#                            if max_value > value:
+#                                max_value = value
+#                                px_int = key / float(depth)
+#                                print(key, depth)
+#                                
+                        
+                        print(px_int)
+            quadrantimg.show_image()
+            from matplotlib import pyplot as plt
+            plt.show()
             
         
         
@@ -277,7 +322,7 @@ class AvgRGBMemSave(object):
             picture = self.get_image(0)       
         
         s = MyRGBImg(np.zeros(picture.data.shape))
-        s = color.rgb2lab(s.data)
+        #s = color.rgb2lab(s.data)
         
         for i in range(sizedataset):
             if debug:
@@ -288,18 +333,21 @@ class AvgRGBMemSave(object):
             else:
                 picture = self.get_image(i)
             # convert both to lab
-            im = color.rgb2lab(picture.data)
+            #im = color.rgb2lab(picture.data)
+            im = picture.data
             #perform operations
             s += im
             
             if transition:
                 tr = s / float(i + 1)
-                avg = MyRGBImg(color.lab2rgb(tr))
+                #avg = MyRGBImg(color.lab2rgb(tr))
+                avg = tr
                 avg.save(join(self.subfolders["avg_transition"], "avg_tr_" + str(i) + ".png"))
                 
             
         s = s / float(sizedataset)
-        self.avg = MyRGBImg(color.lab2rgb(s))
+        #self.avg = MyRGBImg(color.lab2rgb(s))
+        self.avg = s
         
         if self.avg.data.shape[0] == self.avg.data.shape[1]:
             self.avg.rotate(90)
@@ -327,6 +375,7 @@ class AvgRGBMemSave(object):
             
             # load picture to align
             algimage = self.get_image(i)
+            algimage.inspect()
             
             if algimage.data.shape[0] == algimage.data.shape[1]:
                 algimage.rotate(90)
@@ -338,7 +387,9 @@ class AvgRGBMemSave(object):
                 algimage.squareit()
                 algimage.rotate(self.algs[i][2])
                 algimage.move(-self.algs[i][0], -self.algs[i][1])                
-
+            
+            print("- After -")
+            algimage.inspect()
             # save the image
             self.save_alg_image(i, algimage)
 
