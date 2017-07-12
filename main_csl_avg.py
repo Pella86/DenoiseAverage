@@ -34,6 +34,99 @@ from MyRGBImage_class import MyRGBImg
 from AvgRGB_class import AvgRGBMemSave, AvgRGB, get_pathname
 
 
+
+
+def main(argv):
+    help_message  = "---------------- HELP ----------------\n"
+    help_message += "Usage:\n"
+    help_message += "pythong main_avg.py -d path/to/folder/ -cd -cdrgb -avg -avgrgb -graph\n"
+    help_message += "  -d | --directory: path to any directory, the program will generate the dataset, or calculate the average in the folder.\n"
+    help_message += "  -cd: creates gray scale dataset.\n"
+    help_message += "  -cdrgb: creates rgb scale dataset.\n"
+    help_message += "  -avg: calculates the alignment and average of the picture in greyscale mode.\n"
+    help_message += "  -avgrgb: calculates and outputs a rgb average, needs the data from -avg.\n"
+    help_message += "  -graph: calculates and outputs the movement and angles graphs, needs the data from -avg.\n"
+    help_message += "  -s: sound at the end of process.\n"    
+    help_message += "  -h, --help: prints this.\n"
+    
+    
+    path, name, ext = get_pathname(argv[0])
+    print("Script:", name + ext, "started")
+    
+    # main_avg.py -d path/to/dir -o 011111 | -h
+    
+    # get the arguments
+    opts = argv[1:]
+    
+    folder = ""
+    create_dataset = False
+    create_rgb_dataset = False
+    avgerage_gray = False
+    average_rgb = False
+    produce_graphs = False
+    sound_of_silence = False
+
+    
+    if len(opts) == 1 and opts in ('-h', '--help'):
+        print(help_message)
+    else:
+        nopt = 0
+        while nopt < len(opts):
+            opt = opts[nopt]
+            if opt in ("-d", "--directory"):
+                try:
+                    nopt += 1 
+                    folder = opts[nopt]
+                except IndexError:
+                    pass
+            if opt == "-cd":
+                create_dataset = True
+            if opt == "-cdrgb":
+                create_rgb_dataset = True
+            if opt == "-avg":
+                avgerage_gray = True
+            if opt == "-avgrgb":
+                average_rgb = True
+            if opt == "-graph":
+                produce_graphs = True
+            if opt == "-s":
+                sound_of_silence = True
+            nopt += 1
+    
+    inopt = [create_dataset, create_rgb_dataset, avgerage_gray, average_rgb, produce_graphs]
+    
+    if isdir(folder):
+        if all(opt == False for opt in inopt):
+            print("No options chosen")
+            print("")
+            print(help_message)
+        if create_dataset:
+            run_create_test_dataset(folder)
+        
+        if create_rgb_dataset:
+            run_create_rgb_dataset(folder)
+       
+        if avgerage_gray:
+            run_average_gray(folder)
+        
+        if average_rgb:
+            run_average_rgb(folder)
+    
+        if produce_graphs:
+            run_produce_graphs(folder)   
+        
+        if sound_of_silence:
+            import winsound
+            Freq = 2500 # Set Frequency To 2500 Hertz
+            Dur = 1000 # Set Duration To 1000 ms == 1 second
+            winsound.Beep(Freq,Dur)            
+    else:
+        print("-d option is not a folder")
+        print("")
+        print(help_message)
+    
+
+
 def run_create_test_dataset(folder):
     debug_mode = True
     
@@ -350,9 +443,9 @@ def run_average_rgb(folder):
     
     memsave = True # True | False
     
-    mean_mode = "Mean"  # Mean | Median | Mode | Sum
+    mean_mode = "Mean"  # Mean | Median | Mode   
     
-    algimages = False # True | False
+    algimages = True # True | False
     
     usealgimages = True # True | False
 
@@ -365,9 +458,9 @@ def run_average_rgb(folder):
     mylog.log("Memory saving mode: " + str(memsave))
     
     if memsave:
-        avg = AvgRGBMemSave(datasetpath, mylog)
+        avg = AvgRGBMemSave(datasetpath)
     else:
-        avg = AvgRGB(datasetpath, mylog)
+        avg = AvgRGB(datasetpath)
     
    
         
@@ -420,37 +513,38 @@ def run_clean_up(folder):
 
 if __name__ == "__main__":
     print("START AVERAGING SCRIPT")
+    main(sys.argv)
 
-    #folders = ["dataset45", "dataset46", "dataset47", "dataset48", "dataset49"]
-    folders = ["dataset41"]
-    
-    for fldr in folders:
-        folder = "../../silentcam/" + fldr + "/"
-        
-        create_dataset = False
-        create_rgb_dataset = False
-        avgerage_gray = False
-        average_rgb = True
-        produce_graphs = False
-        clean_up_files = False
-    
-        if create_dataset:
-            run_create_test_dataset(folder)
-        
-        if create_rgb_dataset:
-            run_create_rgb_dataset(folder)
-       
-        if avgerage_gray:
-            run_average_gray(folder)
-        
-        if average_rgb:
-            run_average_rgb(folder)
-    
-        if produce_graphs:
-            run_produce_graphs(folder)
-            
-        if clean_up_files:
-            run_clean_up(folder)
+#    folders = ["dataset45", "dataset46", "dataset47", "dataset48", "dataset49"]
+#    #folders = ["dataset42"]
+#    
+#    for fldr in folders:
+#        folder = "../../silentcam/" + fldr + "/"
+#        
+#        create_dataset = False
+#        create_rgb_dataset = False
+#        avgerage_gray = True
+#        average_rgb = True
+#        produce_graphs = True
+#        clean_up_files = False
+#    
+#        if create_dataset:
+#            run_create_test_dataset(folder)
+#        
+#        if create_rgb_dataset:
+#            run_create_rgb_dataset(folder)
+#       
+#        if avgerage_gray:
+#            run_average_gray(folder)
+#        
+#        if average_rgb:
+#            run_average_rgb(folder)
+#    
+#        if produce_graphs:
+#            run_produce_graphs(folder)
+#            
+#        if clean_up_files:
+#            run_clean_up(folder)
 
     
     print("SCRIPT FINISH!")
