@@ -79,8 +79,9 @@ class MyRGBImg(object):
         plt.imsave(filename, self.data)
     
     # debug functions
-    def inspect(self, channel = ''):
-        if channel == '':
+
+    def inspect(self, channel = ""):
+        if channel == "":
             for c in range(3):
                 self.get_channel(c).inspect(True)
         else:

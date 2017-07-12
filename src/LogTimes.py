@@ -18,12 +18,13 @@ from os.path import isfile
 class Logger:
     ''' This class will manage the logging '''
     
-    def __init__(self, title = None, pathfile = None, debug_mode = True):
+    def __init__(self, title = None, pathfile = None, debug_mode = True, debug_level = 0):
         self.path_file = pathfile
         self.debug_mode = debug_mode
         self.starttime = time.perf_counter()
         self.nowtime = time.perf_counter()
         self.lastcall = time.perf_counter() 
+        self.debug_level = debug_level
         
         # create file?
 #        if not isfile(self.path_file):
@@ -36,7 +37,6 @@ class Logger:
             self.log("=============================================================\n" +
                      s +
                      "\n=============================================================")           
-
 
 
     def convert_in_ddhhss(self, seconds):
