@@ -1,1 +1,4 @@
 src/__pycache__/*
+*.pyc
+trash/reportGenerator.py
+*.pyc
